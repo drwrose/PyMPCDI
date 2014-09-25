@@ -3,9 +3,12 @@ import sys
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 
+from PfmFile import PfmFile
+
 mpcdi = MpcdiFile(sys.argv[1])
 
-pfm = mpcdi.extractPfmFile('right_warp.pfm')
+pfm = PfmFile('t.pfm')
+#mpcdi.extractPfmFile('right_warp.pfm')
 print pfm.xSize, pfm.ySize, pfm.scale
 
 def init():

@@ -14,7 +14,7 @@ class PfmFile:
         Python string. """
         
         self.filename = filename
-        if data is not None:
+        if data is None:
             data = open(filename, 'rb').read()
 
         # First two characters are the magic number.
