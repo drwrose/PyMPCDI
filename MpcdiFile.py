@@ -1,5 +1,6 @@
 import zipfile
 from xml.etree import ElementTree
+import PfmFile
 
 class MpcdiFile:
     def __init__(self, filename = None):
@@ -19,7 +20,7 @@ class MpcdiFile:
         
         self.filename = filename
         self.zip = zipfile.ZipFile(self.filename, 'r')
-        docData = self.zip.read('mpcdi.xml')
+        docData = self.extractSubfile('mpcdi.xml')
         self.doc = ElementTree.fromstring(docData)
 
         self.profile = None
@@ -42,6 +43,19 @@ class MpcdiFile:
             regionName = xfileset.attrib['region']
             region = self.regions[regionName]
             region.addFileset(xfileset)
+
+    def extractSubfile(self, filename):
+        """ Returns the string data from the subfile within the mpcdi
+        file with the given name. """
+        
+        return self.zip.read(filename)
+
+    def extractPfmFile(self, filename):
+        """ Returns a PfmFile object corresponding to the named
+        file.pfm within the mpcdi file. """
+
+        data = self.extractSubfile(filename)
+        return PfmFile.PfmFile(filename = filename, data = data)
 
 class BufferDef:
     def __init__(self, xbuffer):
