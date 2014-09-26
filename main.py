@@ -31,10 +31,10 @@ def init():
     card.initGL()
 
 def draw():
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glClear(GL_COLOR_BUFFER_BIT)
 
     mesh.draw()
-    #card.draw()
+    card.draw()
 
     glutSwapBuffers()
 
@@ -58,7 +58,7 @@ def reshape(width, height):
 
 if __name__ == '__main__':
     glutInit(sys.argv)
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE)
 
     glutInitWindowPosition(0, 0)
     glutInitWindowSize(960, 540)

@@ -45,6 +45,7 @@ class TextureImage:
         glTexImage2D(GL_TEXTURE_2D, 0, format, img.size[0], img.size[1], 0, format, GL_UNSIGNED_BYTE, img_data)
         
     def apply(self):
+        glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.texobj)
         glEnable(GL_TEXTURE_2D)
         

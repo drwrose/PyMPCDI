@@ -67,7 +67,6 @@ class PfmTexLookup2D:
         self.texture1 = glGetUniformLocation(self.shader, 'texture1')
 
     def draw(self):
-        glPushAttrib(GL_ENABLE_BIT)
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
 
         glActiveTexture(GL_TEXTURE0)
@@ -88,6 +87,5 @@ class PfmTexLookup2D:
         
         glDrawArrays(GL_TRIANGLES, 0, 6)
 
+        glUseProgram(0)
         glPopClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
-        glPopAttrib(GL_ENABLE_BIT)
-        
