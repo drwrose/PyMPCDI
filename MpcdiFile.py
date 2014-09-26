@@ -1,6 +1,7 @@
 import zipfile
 from xml.etree import ElementTree
 import PfmFile
+import TextureImage
 
 class MpcdiFile:
     def __init__(self, filename = None):
@@ -56,6 +57,13 @@ class MpcdiFile:
 
         data = self.extractSubfile(filename)
         return PfmFile.PfmFile(filename = filename, data = data)
+
+    def extractTextureImage(self, filename):
+        """ Returns a TextureImage object corresponding to the named
+        file.png within the mpcdi file. """
+
+        data = self.extractSubfile(filename)
+        return TextureImage.TextureImage(filename = filename, data = data)
 
 class BufferDef:
     def __init__(self, xbuffer):
