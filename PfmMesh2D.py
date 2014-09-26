@@ -65,6 +65,8 @@ class PfmMesh2D:
         glPushAttrib(GL_ENABLE_BIT)
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
 
+        # First, draw the mesh with the media texture applied.
+
         glMatrixMode(GL_TEXTURE)
         glPushMatrix()
         glLoadIdentity()
@@ -93,4 +95,13 @@ class PfmMesh2D:
         glPopClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
         glPopAttrib(GL_ENABLE_BIT)
 
+        # Now apply the blending map.
+
+        # We ought to apply the blending map in linear space, then
+        # re-apply the gamma curve; but this isn't really possible in
+        # the fixed-function pipeline.  So we just naively apply the
+        # blending map in gamma space, by multiplying the blending map
+        # as-is over the whole frame.  This actually isn't a terrible
+        # approach, and looks fine as long as the media is
+        # sufficiently bright.
         self.blendCard.draw()

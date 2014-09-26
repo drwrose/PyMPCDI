@@ -35,6 +35,8 @@ class BlendQuad:
         glVertexPointer(2, GL_FLOAT, 0, None)
         glTexCoordPointer(2, GL_FLOAT, 0, None)
 
+        glColor3f(1.0, 1.0, 1.0)
+
         glDrawArrays(GL_TRIANGLES, 0, 6)
 
         glPopClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)

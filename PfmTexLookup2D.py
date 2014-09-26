@@ -22,7 +22,10 @@ void main() {
   // . . . and use that UV coordinate to look up the media color.
   vec4 col = texture2D(texture1, uv.xy);
 
-  // Linearize the media color.
+  // Linearize the media color.  This assumes the media has the same
+  // gamma exponent as our display.  We could also use some other
+  // exponent; or we could pre-linearize the media by using an sRGB
+  // texture format.
   col.x = pow(col.x, gamma);
   col.y = pow(col.y, gamma);
   col.z = pow(col.z, gamma);
