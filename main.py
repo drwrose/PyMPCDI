@@ -10,7 +10,7 @@ from MpacsWarp2DFixedFunction import MpacsWarp2DFixedFunction
 help = """
 
 This program provides a bare-bones OpenGL implementation of the 2-D
-MPCDI warping specification.  See:
+MPCDI warping specification, using PyOpenGL.  See:
 
 http://www.vesa.org/news/vesa-completes-specifications-for-new-multiple-projector-common-data-interchange-standard-mpcdi/
 
