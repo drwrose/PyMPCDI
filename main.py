@@ -10,11 +10,14 @@ from BlendQuad import BlendQuad
 
 mpcdi = MpcdiFile(sys.argv[1])
 
-pfm = mpcdi.extractPfmFile('proj_a_warp.pfm')
+#pfm = mpcdi.extractPfmFile('proj_a_warp.pfm')
+pfm = mpcdi.extractPfmFile('front_warp.pfm')
 print pfm.xSize, pfm.ySize, pfm.scale
 
-tex = TextureImage('color_grid.png')
-blend = mpcdi.extractTextureImage('proj_a_blend.png')
+#tex = TextureImage('color_grid.png')
+tex = TextureImage('1920x1080_HD_GRID_circles.png')
+#blend = mpcdi.extractTextureImage('proj_a_blend.png')
+blend = mpcdi.extractTextureImage('front_blend.png')
 
 mesh = PfmMesh2D(pfm, tex)
 card = BlendQuad(blend)

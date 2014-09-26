@@ -12,15 +12,18 @@ class TextureImage:
         self.tex = None
 
     def __read(self):
-        if self.filename:
-            return Image.open(self.filename)
         if self.data:
             return Image.open(StringIO(self.data))
+        if self.filename:
+            return Image.open(self.filename)
 
         assert False
 
     def initGL(self):
         img = self.__read()
+        if img.mode == 'P':
+            img = img.convert('RGB')
+            
         img_data = numpy.fromstring(img.tostring(), dtype = 'uint8')
 
         self.texobj = glGenTextures(1)
@@ -39,6 +42,7 @@ class TextureImage:
         elif img.mode == 'L':
             format = GL_LUMINANCE
         else:
+            import pdb; pdb.set_trace()
             raise StandardError, 'Unsupported image mode'
         
         glTexImage2D(GL_TEXTURE_2D, 0, format, img.size[0], img.size[1], 0, format, GL_UNSIGNED_BYTE, img_data)
