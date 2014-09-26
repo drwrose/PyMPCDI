@@ -5,21 +5,23 @@ from OpenGL.GLUT import *
 
 from PfmFile import PfmFile
 from PfmMesh2D import PfmMesh2D
+from PfmTexLookup2D import PfmTexLookup2D
 from TextureImage import TextureImage
 from BlendQuad import BlendQuad
 
 mpcdi = MpcdiFile(sys.argv[1])
 
-#pfm = mpcdi.extractPfmFile('proj_a_warp.pfm')
-pfm = mpcdi.extractPfmFile('front_warp.pfm')
+pfm = mpcdi.extractPfmFile('proj_a_warp.pfm')
+#pfm = mpcdi.extractPfmFile('front_warp.pfm')
 print pfm.xSize, pfm.ySize, pfm.scale
 
-#tex = TextureImage('color_grid.png')
-tex = TextureImage('1920x1080_HD_GRID_circles.png')
-#blend = mpcdi.extractTextureImage('proj_a_blend.png')
-blend = mpcdi.extractTextureImage('front_blend.png')
+tex = TextureImage('color_grid.png')
+#tex = TextureImage('1920x1080_HD_GRID_circles.png')
+blend = mpcdi.extractTextureImage('proj_a_blend.png')
+#blend = mpcdi.extractTextureImage('front_blend.png')
 
-mesh = PfmMesh2D(pfm, tex)
+#mesh = PfmMesh2D(pfm, tex)
+mesh = PfmTexLookup2D(pfm, tex)
 card = BlendQuad(blend)
 
 def init():
@@ -32,7 +34,7 @@ def draw():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     mesh.draw()
-    card.draw()
+    #card.draw()
 
     glutSwapBuffers()
 

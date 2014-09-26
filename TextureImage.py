@@ -9,7 +9,7 @@ class TextureImage:
     def __init__(self, filename = None, data = None):
         self.filename = filename
         self.data = data
-        self.tex = None
+        self.texobj = None
 
     def __read(self):
         if self.data:
@@ -21,7 +21,7 @@ class TextureImage:
 
     def initGL(self):
         img = self.__read()
-        if img.mode == 'P':
+        if img.mode not in ['RGB', 'L']:
             img = img.convert('RGB')
             
         img_data = numpy.fromstring(img.tostring(), dtype = 'uint8')
@@ -37,13 +37,10 @@ class TextureImage:
 
         if img.mode == 'RGB':
             format = GL_RGB
-        elif img.mode == 'RGBA':
-            format = GL_RGBA
         elif img.mode == 'L':
             format = GL_LUMINANCE
         else:
-            import pdb; pdb.set_trace()
-            raise StandardError, 'Unsupported image mode'
+            assert False
         
         glTexImage2D(GL_TEXTURE_2D, 0, format, img.size[0], img.size[1], 0, format, GL_UNSIGNED_BYTE, img_data)
         

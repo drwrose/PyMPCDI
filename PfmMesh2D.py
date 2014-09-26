@@ -2,9 +2,10 @@ from OpenGL.GL import *
 import numpy
 
 class PfmMesh2D:
-    """ This class creates a 2-d mesh out of the data in a pfm file.
-    Each non-NaN point in the pfm file becomes a vertex in the
-    mesh. """
+    """ This class creates a 2-d mesh out of the data in a pfm file,
+    and renders the input media on this mesh to compute the warping.
+    Each point in the pfm file becomes a vertex in the mesh.  Also see
+    PfmTexLookup2D for a different approach. """
 
     def __init__(self, pfm, tex):
         self.pfm = pfm

@@ -8,30 +8,33 @@ class BlendQuad:
         self.blend = blend
 
     def initGL(self):
-        pass
-                
+        # Create a VBO with two triangles to make a unit quad.
+        verts = [
+            [0, 1], [1, 0], [1, 1], 
+            [0, 1], [1, 0], [0, 0],
+            ]
+        verts = numpy.array(verts, dtype = 'float32')
+        self.vertdata = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, self.vertdata)
+        glBufferData(GL_ARRAY_BUFFER, verts, GL_STATIC_DRAW)
+        
     def draw(self):
         glPushAttrib(GL_ENABLE_BIT)
+        glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
         self.blend.apply()
 
         glBlendFunc(GL_ZERO, GL_SRC_COLOR)
         glEnable(GL_BLEND)
-        
-        glBegin(GL_QUADS)
-        glColor3f(1.0, 1.0, 1.0)
 
-        glTexCoord2f(0, 1)
-        glVertex2f(0, 1)
+        glEnableClientState(GL_VERTEX_ARRAY)
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 
-        glTexCoord2f(1, 1)
-        glVertex2f(1, 1)
+        glBindBuffer(GL_ARRAY_BUFFER, self.vertdata)
+        glVertexPointer(2, GL_FLOAT, 0, None)
+        glTexCoordPointer(2, GL_FLOAT, 0, None)
 
-        glTexCoord2f(1, 0)
-        glVertex2f(1, 0)
+        glDrawArrays(GL_TRIANGLES, 0, 6)
 
-        glTexCoord2f(0, 0)
-        glVertex2f(0, 0)
-        
-        glEnd()
+        glPopClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
         glPopAttrib(GL_ENABLE_BIT)
         
