@@ -73,11 +73,16 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
         glMatrixMode(GL_TEXTURE)
         glPushMatrix()
         glLoadIdentity()
-        glTranslatef(self.offset[0], self.offset[1], 0.0)
-        glScale(self.scale[0], self.scale[1], 0.0)
-        print self.offset
+
+        # Flip the V axis to match OpenGL's texturing convention.  (Or
+        # we could have loaded the media file in upside-down.)
         glTranslatef(0.0, 1.0, 0.0)
         glScalef(1.0, -1.0, 1.0)
+
+        # Scale the warping UV's into the correct range specified by
+        # the Region (as defined in the mpcdi.xml file).
+        glTranslatef(self.region.x, self.region.y, 0.0)
+        glScale(self.region.xsize, self.region.ysize, 1.0)
 
         self.media.apply()
         
@@ -106,8 +111,8 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
         # We ought to apply the blending map in linear space, then
         # re-apply the gamma curve; but this isn't really possible in
         # the fixed-function pipeline.  So we just naively apply the
-        # blending map in gamma space, by multiplying the blending map
-        # as-is over the whole frame.  This actually isn't a terrible
-        # approach, and looks fine as long as the media is
-        # sufficiently bright.
+        # blending map to the warp by multiplying it as-is over the
+        # whole frame (assuming that it's been pre-scaled with the
+        # target gamma).  This actually isn't a terrible approach, and
+        # looks fine as long as the media is sufficiently bright.
         self.blendCard.draw()

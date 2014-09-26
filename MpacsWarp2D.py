@@ -15,7 +15,15 @@ class MpacsWarp2D:
         print self.pfm.xSize, self.pfm.ySize, self.pfm.scale
         self.blend = self.mpcdi.extractTextureImage(self.region.alphaMap.path)
 
-        self.gamma = self.region.alphaMap.gammaEmbedded
+        # This is the gamma value of the embedded alpha map.
+        self.blendGamma = self.region.alphaMap.gammaEmbedded
+
+        # This is the gamma value we will want to display.
+        self.targetGamma = self.blendGamma
+
+        # This is the gamma value of the source media image.
+        self.mediaGamma = self.blendGamma
+
         self.offset = (self.region.x, self.region.y)
         self.scale = (self.region.xsize, self.region.ysize)
         

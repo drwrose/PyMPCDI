@@ -11,34 +11,34 @@ void main() {
 """
 
 fragmentShader = """
-uniform sampler2D texture0;
-uniform sampler2D texture1;
-uniform sampler2D texture2;
-uniform float gamma;
+uniform sampler2D texture0, texture1, texture2;
+uniform float blendGamma, targetGamma, mediaGamma;
+uniform mat4 warpMat;
 
 void main() {
   // Look up the warped UV coordinate in the pfm texture . . .
   vec4 uv = texture2D(texture0, gl_TexCoord[0].xy);
 
+  // . . . apply the specified transform . . .
+  uv = warpMat * uv;
+
   // . . . and use that UV coordinate to look up the media color.
   vec4 col = texture2D(texture1, uv.xy);
 
-  // Linearize the media color.  This assumes the media has the same
-  // gamma exponent as our display.  We could also use some other
-  // exponent; or we could pre-linearize the media by using an sRGB
-  // texture format.
-  col.x = pow(col.x, gamma);
-  col.y = pow(col.y, gamma);
-  col.z = pow(col.z, gamma);
+  // Linearize the media color.  We could also pre-linearize the media
+  // by using an sRGB texture format.
+  col.x = pow(col.x, mediaGamma);
+  col.y = pow(col.y, mediaGamma);
+  col.z = pow(col.z, mediaGamma);
 
   // Get the blend color at this pixel, and linearize it.
   vec4 blend = texture2D(texture2, gl_TexCoord[0].xy);
-  float blendLinear = pow(blend.x, gamma);
+  float blendLinear = pow(blend.x, blendGamma);
 
   // Apply the blend color, and then re-apply the gamma curve.
-  col.x = pow(col.x * blendLinear, 1.0 / gamma);
-  col.y = pow(col.y * blendLinear, 1.0 / gamma);
-  col.z = pow(col.z * blendLinear, 1.0 / gamma);
+  col.x = pow(col.x * blendLinear, 1.0 / targetGamma);
+  col.y = pow(col.y * blendLinear, 1.0 / targetGamma);
+  col.z = pow(col.z * blendLinear, 1.0 / targetGamma);
   
   gl_FragColor = col;
 }
@@ -84,6 +84,24 @@ class MpacsWarp2DShader(MpacsWarp2D):
         glBindBuffer(GL_ARRAY_BUFFER, self.vertdata)
         glBufferData(GL_ARRAY_BUFFER, verts, GL_STATIC_DRAW)
 
+        # A matrix to scale the warping UV's into the correct range
+        # specified by the Region (as defined in the mpcdi.xml file).
+        rangeMat = numpy.array(
+            [[self.region.xsize, 0, 0, 0],
+             [0, self.region.ysize, 0, 0],
+             [0, 0, 1, 0],
+             [self.region.x, self.region.y, 0, 1]])
+
+        # We also need to flip the V axis to match OpenGL's texturing convention.
+        flipMat = numpy.array(
+            [[1, 0, 0, 0],
+             [0, -1, 0, 0],
+             [0, 0, 1, 0],
+             [0, 1, 0, 1]])
+
+        # Accumulate them both into the single warping matrix.
+        self.warpMat = rangeMat.dot(flipMat)
+
         # Compile the shaders.
         vs = shaders.compileShader(vertexShader, GL_VERTEX_SHADER)
         fs = shaders.compileShader(fragmentShader, GL_FRAGMENT_SHADER)
@@ -92,7 +110,10 @@ class MpacsWarp2DShader(MpacsWarp2D):
         self.texture0Loc = glGetUniformLocation(self.shader, 'texture0')
         self.texture1Loc = glGetUniformLocation(self.shader, 'texture1')
         self.texture2Loc = glGetUniformLocation(self.shader, 'texture2')
-        self.gammaLoc = glGetUniformLocation(self.shader, 'gamma')
+        self.blendGammaLoc = glGetUniformLocation(self.shader, 'blendGamma')
+        self.targetGammaLoc = glGetUniformLocation(self.shader, 'targetGamma')
+        self.mediaGammaLoc = glGetUniformLocation(self.shader, 'mediaGamma')
+        self.warpMatLoc = glGetUniformLocation(self.shader, 'warpMat')
 
     def draw(self):
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
@@ -108,7 +129,10 @@ class MpacsWarp2DShader(MpacsWarp2D):
         glUniform1i(self.texture0Loc, 0)
         glUniform1i(self.texture1Loc, 1)
         glUniform1i(self.texture2Loc, 2)
-        glUniform1f(self.gammaLoc, self.gamma)
+        glUniform1f(self.blendGammaLoc, self.blendGamma)
+        glUniform1f(self.targetGammaLoc, self.targetGamma)
+        glUniform1f(self.mediaGammaLoc, self.mediaGamma)
+        glUniformMatrix4fv(self.warpMatLoc, 1, GL_FALSE, self.warpMat)
 
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_TEXTURE_COORD_ARRAY)

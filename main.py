@@ -10,19 +10,19 @@ mpcdi = MpcdiFile(sys.argv[1])
 regionName = sys.argv[2]
 region = mpcdi.regions[regionName]
 
-mesh = MpacsWarp2DShader(mpcdi, region)
-#mesh = MpacsWarp2DFixedFunction(mpcdi, region)
+warp = MpacsWarp2DShader(mpcdi, region)
+#warp = MpacsWarp2DFixedFunction(mpcdi, region)
 
-mesh.setMediaFilename('color_grid.png')
-#mesh.setMediaFilename('1920x1080_HD_GRID_circles.png')
+#warp.setMediaFilename('color_grid.png')
+warp.setMediaFilename('1920x1080_HD_GRID_circles.png')
 
 def init():
-    mesh.initGL()
+    warp.initGL()
 
 def draw():
     glClear(GL_COLOR_BUFFER_BIT)
 
-    mesh.draw()
+    warp.draw()
 
     glutSwapBuffers()
 
