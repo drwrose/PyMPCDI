@@ -3,26 +3,18 @@ import sys
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 
-from PfmFile import PfmFile
-from PfmMesh2D import PfmMesh2D
-from PfmTexLookup2D import PfmTexLookup2D
-from TextureImage import TextureImage
+from MpacsWarp2DShader import MpacsWarp2DShader
+from MpacsWarp2DFixedFunction import MpacsWarp2DFixedFunction
 
 mpcdi = MpcdiFile(sys.argv[1])
+regionName = sys.argv[2]
+region = mpcdi.regions[regionName]
 
-pfm = mpcdi.extractPfmFile('proj_a_warp.pfm')
-#pfm = mpcdi.extractPfmFile('front_warp.pfm')
-print pfm.xSize, pfm.ySize, pfm.scale
+mesh = MpacsWarp2DShader(mpcdi, region)
+#mesh = MpacsWarp2DFixedFunction(mpcdi, region)
 
-tex = TextureImage('color_grid.png')
-#tex = TextureImage('1920x1080_HD_GRID_circles.png')
-blend = mpcdi.extractTextureImage('proj_a_blend.png')
-#blend = mpcdi.extractTextureImage('front_blend.png')
-
-gamma = 2.2
-#gamma = 1
-#mesh = PfmMesh2D(pfm, tex, blend, gamma)
-mesh = PfmTexLookup2D(pfm, tex, blend, gamma)
+mesh.setMediaFilename('color_grid.png')
+#mesh.setMediaFilename('1920x1080_HD_GRID_circles.png')
 
 def init():
     mesh.initGL()

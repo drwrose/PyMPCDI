@@ -1,3 +1,4 @@
+from MpacsWarp2D import MpacsWarp2D
 from OpenGL.GL import *
 from OpenGL.GL import shaders
 import numpy
@@ -43,24 +44,22 @@ void main() {
 }
 """
 
-class PfmTexLookup2D:
-    """ This class creates a floating-point texture out of the data in
-    a pfm file, and performs a two-step texture lookup in the fragment
-    shader to compute the warping.  Also see PfmMesh2D for a different
-    approach. """
+class MpacsWarp2DShader(MpacsWarp2D):
+    """
+    Implements 2D warping via a shader pipeline.
+    
+    This class creates a floating-point texture out of the data in
+    a pfm file, and performs all of the warping and blending in the
+    fragment shader via a two-step texture lookup.
+    """
 
-    def __init__(self, pfm, tex, blend, gamma, offset, scale):
-        self.pfm = pfm
-        self.tex = tex
-        self.blend = blend
-        self.gamma = gamma
-        self.offset = offset
-        self.scale = scale
-        
+    def __init__(self, mpcdi, region):
+        MpacsWarp2D.__init__(self, mpcdi, region)
+
         self.pfmtexobj = None
 
     def initGL(self):
-        self.tex.initGL()
+        MpacsWarp2D.initGL(self)
         self.blend.initGL()
 
         # Load the pfm data as a floating-point texture.
@@ -101,7 +100,7 @@ class PfmTexLookup2D:
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.pfmtexobj)
         glActiveTexture(GL_TEXTURE1)
-        glBindTexture(GL_TEXTURE_2D, self.tex.texobj)
+        glBindTexture(GL_TEXTURE_2D, self.media.texobj)
         glActiveTexture(GL_TEXTURE2)
         glBindTexture(GL_TEXTURE_2D, self.blend.texobj)
 

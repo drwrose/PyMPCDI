@@ -1,25 +1,26 @@
-from OpenGL.GL import *
+from MpacsWarp2D import MpacsWarp2D
 from BlendQuad import BlendQuad
+from OpenGL.GL import *
 import numpy
 
-class PfmMesh2D:
-    """ This class creates a 2-d mesh out of the data in a pfm file,
-    and renders the input media on this mesh to compute the warping.
-    Each point in the pfm file becomes a vertex in the mesh.  Also see
-    PfmTexLookup2D for a different approach. """
+class MpacsWarp2DFixedFunction(MpacsWarp2D):
+    """
+    Implements 2D warping via the OpenGL fixed-function pipeline.
 
-    def __init__(self, pfm, tex, blend, gamma, offset, scale):
-        self.pfm = pfm
-        self.tex = tex
-        self.blendCard = BlendQuad(blend)
-        self.gamma = gamma
-        self.offset = offset
-        self.scale = scale
+    This class creates a 2-d mesh out of the data in a pfm file,
+    and renders the input media on this mesh to compute the warping.
+    Each point in the pfm file becomes a vertex in the mesh.
+    """
+
+    def __init__(self, mpcdi, region):
+        MpacsWarp2D.__init__(self, mpcdi, region)
+        
+        self.blendCard = BlendQuad(self.blend)
 
     def initGL(self):
-        self.tex.initGL()
+        MpacsWarp2D.initGL(self)
         self.blendCard.initGL()
-
+        
         xSize = self.pfm.xSize
         ySize = self.pfm.ySize
 
@@ -78,7 +79,7 @@ class PfmMesh2D:
         glTranslatef(0.0, 1.0, 0.0)
         glScalef(1.0, -1.0, 1.0)
 
-        self.tex.apply()
+        self.media.apply()
         
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_TEXTURE_COORD_ARRAY)
