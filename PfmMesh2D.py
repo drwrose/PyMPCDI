@@ -1,4 +1,5 @@
 from OpenGL.GL import *
+from BlendQuad import BlendQuad
 import numpy
 
 class PfmMesh2D:
@@ -7,11 +8,16 @@ class PfmMesh2D:
     Each point in the pfm file becomes a vertex in the mesh.  Also see
     PfmTexLookup2D for a different approach. """
 
-    def __init__(self, pfm, tex):
+    def __init__(self, pfm, tex, blend, gamma):
         self.pfm = pfm
         self.tex = tex
+        self.blendCard = BlendQuad(blend)
+        self.gamma = gamma
 
     def initGL(self):
+        self.tex.initGL()
+        self.blendCard.initGL()
+
         xSize = self.pfm.xSize
         ySize = self.pfm.ySize
 
@@ -86,3 +92,5 @@ class PfmMesh2D:
         
         glPopClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
         glPopAttrib(GL_ENABLE_BIT)
+
+        self.blendCard.draw()

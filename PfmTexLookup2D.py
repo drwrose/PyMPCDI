@@ -12,13 +12,29 @@ void main() {
 fragmentShader = """
 uniform sampler2D texture0;
 uniform sampler2D texture1;
+uniform sampler2D texture2;
+uniform float gamma;
 
 void main() {
-  // Look up the UV coordinate in the pfm texture
+  // Look up the warped UV coordinate in the pfm texture . . .
   vec4 uv = texture2D(texture0, gl_TexCoord[0].xy);
 
-  // And use that UV coordinate to look up the media color
+  // . . . and use that UV coordinate to look up the media color.
   vec4 col = texture2D(texture1, uv.xy);
+
+  // Linearize the media color.
+  col.x = pow(col.x, gamma);
+  col.y = pow(col.y, gamma);
+  col.z = pow(col.z, gamma);
+
+  // Get the blend color at this pixel, and linearize it.
+  vec4 blend = texture2D(texture2, gl_TexCoord[0].xy);
+  float blendLinear = pow(blend.x, gamma);
+
+  // Apply the blend color, and then re-apply the gamma curve.
+  col.x = pow(col.x * blendLinear, 1.0 / gamma);
+  col.y = pow(col.y * blendLinear, 1.0 / gamma);
+  col.z = pow(col.z * blendLinear, 1.0 / gamma);
   
   gl_FragColor = col;
 }
@@ -30,12 +46,18 @@ class PfmTexLookup2D:
     shader to compute the warping.  Also see PfmMesh2D for a different
     approach. """
 
-    def __init__(self, pfm, tex):
+    def __init__(self, pfm, tex, blend, gamma):
         self.pfm = pfm
         self.tex = tex
+        self.blend = blend
+        self.gamma = gamma
+        
         self.pfmtexobj = None
 
     def initGL(self):
+        self.tex.initGL()
+        self.blend.initGL()
+
         # Load the pfm data as a floating-point texture.
         self.pfmtexobj = glGenTextures(1)
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
@@ -63,8 +85,10 @@ class PfmTexLookup2D:
         fs = shaders.compileShader(fragmentShader, GL_FRAGMENT_SHADER)
         self.shader = shaders.compileProgram(vs, fs)
 
-        self.texture0 = glGetUniformLocation(self.shader, 'texture0')
-        self.texture1 = glGetUniformLocation(self.shader, 'texture1')
+        self.texture0Loc = glGetUniformLocation(self.shader, 'texture0')
+        self.texture1Loc = glGetUniformLocation(self.shader, 'texture1')
+        self.texture2Loc = glGetUniformLocation(self.shader, 'texture2')
+        self.gammaLoc = glGetUniformLocation(self.shader, 'gamma')
 
     def draw(self):
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
@@ -73,10 +97,14 @@ class PfmTexLookup2D:
         glBindTexture(GL_TEXTURE_2D, self.pfmtexobj)
         glActiveTexture(GL_TEXTURE1)
         glBindTexture(GL_TEXTURE_2D, self.tex.texobj)
+        glActiveTexture(GL_TEXTURE2)
+        glBindTexture(GL_TEXTURE_2D, self.blend.texobj)
 
         shaders.glUseProgram(self.shader)
-        glUniform1i(self.texture0, 0)
-        glUniform1i(self.texture1, 1)
+        glUniform1i(self.texture0Loc, 0)
+        glUniform1i(self.texture1Loc, 1)
+        glUniform1i(self.texture2Loc, 2)
+        glUniform1f(self.gammaLoc, self.gamma)
 
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_TEXTURE_COORD_ARRAY)

@@ -8,6 +8,8 @@ class BlendQuad:
         self.blend = blend
 
     def initGL(self):
+        self.blend.initGL()
+        
         # Create a VBO with two triangles to make a unit quad.
         verts = [
             [0, 1], [1, 0], [1, 1], 

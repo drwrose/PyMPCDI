@@ -7,7 +7,6 @@ from PfmFile import PfmFile
 from PfmMesh2D import PfmMesh2D
 from PfmTexLookup2D import PfmTexLookup2D
 from TextureImage import TextureImage
-from BlendQuad import BlendQuad
 
 mpcdi = MpcdiFile(sys.argv[1])
 
@@ -20,21 +19,18 @@ tex = TextureImage('color_grid.png')
 blend = mpcdi.extractTextureImage('proj_a_blend.png')
 #blend = mpcdi.extractTextureImage('front_blend.png')
 
-#mesh = PfmMesh2D(pfm, tex)
-mesh = PfmTexLookup2D(pfm, tex)
-card = BlendQuad(blend)
+gamma = 2.2
+#gamma = 1
+#mesh = PfmMesh2D(pfm, tex, blend, gamma)
+mesh = PfmTexLookup2D(pfm, tex, blend, gamma)
 
 def init():
-    tex.initGL()
-    blend.initGL()
     mesh.initGL()
-    card.initGL()
 
 def draw():
     glClear(GL_COLOR_BUFFER_BIT)
 
     mesh.draw()
-    card.draw()
 
     glutSwapBuffers()
 
