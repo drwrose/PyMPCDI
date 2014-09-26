@@ -1,7 +1,7 @@
 from TextureImage import TextureImage
 
 class MpacsWarp2D:
-    """ The base class for performing warping in the "2d" model
+    """ The base class for performing warping in the "2d" profile
     specified in the mpcdi file.  This warps media according to a 2-d
     pfm file and applies a blending map. """
     
@@ -9,10 +9,12 @@ class MpacsWarp2D:
         self.mpcdi = mpcdi
         self.region = region
 
+        # This class only supports the "2d" profile.
+        assert self.mpcdi.profile == '2d'
+
         self.media = None
 
         self.pfm = self.mpcdi.extractPfmFile(self.region.geometryWarpFile.path)
-        print self.pfm.xSize, self.pfm.ySize, self.pfm.scale
         self.blend = self.mpcdi.extractTextureImage(self.region.alphaMap.path)
 
         # This is the gamma value of the embedded alpha map.
@@ -23,9 +25,6 @@ class MpacsWarp2D:
 
         # This is the gamma value of the source media image.
         self.mediaGamma = self.blendGamma
-
-        self.offset = (self.region.x, self.region.y)
-        self.scale = (self.region.xsize, self.region.ysize)
         
     def setMediaFilename(self, mediaFilename):
         self.mediaFilename = mediaFilename

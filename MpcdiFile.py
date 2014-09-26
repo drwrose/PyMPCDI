@@ -27,6 +27,7 @@ class MpcdiFile:
         self.profile = None
         self.buffers = {}
         self.regions = {}
+        self.regionIdList = []  # sorted in file order
         
         self.profile = self.doc.attrib['profile']
 
@@ -38,6 +39,7 @@ class MpcdiFile:
             for xregion in xbuffer.iter('region'):
                 region = RegionDef(buffer, xregion)
                 self.regions[region.id] = region
+                self.regionIdList.append(region.id)
 
         xfiles = self.doc.find('files')
         for xfileset in xfiles.iter('fileset'):

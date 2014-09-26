@@ -41,7 +41,9 @@ class TextureImage:
             format = GL_LUMINANCE
         else:
             assert False
-        
+
+        # Ideally, we would load 16-bit textures here if we could, but
+        # PIL doesn't appear to support that.
         glTexImage2D(GL_TEXTURE_2D, 0, format, img.size[0], img.size[1], 0, format, GL_UNSIGNED_BYTE, img_data)
         
     def apply(self):

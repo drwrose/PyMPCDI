@@ -92,7 +92,9 @@ class MpacsWarp2DShader(MpacsWarp2D):
              [0, 0, 1, 0],
              [self.region.x, self.region.y, 0, 1]])
 
-        # We also need to flip the V axis to match OpenGL's texturing convention.
+        # We also need to flip the V axis to match OpenGL's texturing
+        # convention.  (Or we could have loaded the media file in
+        # upside-down.)
         flipMat = numpy.array(
             [[1, 0, 0, 0],
              [0, -1, 0, 0],
