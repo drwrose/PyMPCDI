@@ -6,9 +6,11 @@ class PfmMesh2D:
     Each non-NaN point in the pfm file becomes a vertex in the
     mesh. """
 
-    def __init__(self, pfm, tex):
+    def __init__(self, pfm, tex, offset, scale):
         self.pfm = pfm
         self.tex = tex
+        self.offset = offset
+        self.scale = scale
 
     def initGL(self):
         xSize = self.pfm.xSize
@@ -61,6 +63,9 @@ class PfmMesh2D:
         glMatrixMode(GL_TEXTURE)
         glPushMatrix()
         glLoadIdentity()
+        glTranslatef(self.offset[0], self.offset[1], 0.0)
+        glScale(self.scale[0], self.scale[1], 0.0)
+        print self.offset
         glTranslatef(0.0, 1.0, 0.0)
         glScalef(1.0, -1.0, 1.0)
 

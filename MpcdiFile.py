@@ -108,12 +108,12 @@ class RegionDef:
 
     def addFileset(self, xfileset):
         for keyword in ['geometryWarpFile', 'alphaMap', 'distortionMap']:
-            xfile = xfileset.attrib.get(keyword, None)
-            if xfile:
+            xfile = xfileset.find(keyword, None)
+            if xfile is not None:
                 file = FileDef(xfile)
             else:
                 file = None
-                
+
             setattr(self, keyword, file)
 
 class FileDef:
@@ -123,7 +123,7 @@ class FileDef:
         # Integer properties
         for keyword in ['componentDepth', 'bitdepth']:
             xe = xfile.find(keyword)
-            if xe:
+            if xe is not None:
                 value = int(xe.text)
             else:
                 value = None
@@ -131,8 +131,8 @@ class FileDef:
             
         # Float properties
         for keyword in ['gammaEmbedded']:
-            xe = xfile.FirstChildElement(keyword)
-            if xe:
+            xe = xfile.find(keyword)
+            if xe is not None:
                 value = float(xe.text)
             else:
                 value = None
