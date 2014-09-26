@@ -5,34 +5,32 @@ from OpenGL.GLUT import *
 
 from PfmFile import PfmFile
 from PfmMesh2D import PfmMesh2D
+from PfmTexLookup2D import PfmTexLookup2D
 from TextureImage import TextureImage
-from BlendQuad import BlendQuad
 
 mpcdi = MpcdiFile(sys.argv[1])
 
-#pfm = mpcdi.extractPfmFile('proj_a_warp.pfm')
-pfm = mpcdi.extractPfmFile('front_warp.pfm')
+pfm = mpcdi.extractPfmFile('proj_a_warp.pfm')
+#pfm = mpcdi.extractPfmFile('front_warp.pfm')
 print pfm.xSize, pfm.ySize, pfm.scale
 
-#tex = TextureImage('color_grid.png')
-tex = TextureImage('1920x1080_HD_GRID_circles.png')
-#blend = mpcdi.extractTextureImage('proj_a_blend.png')
-blend = mpcdi.extractTextureImage('front_blend.png')
+tex = TextureImage('color_grid.png')
+#tex = TextureImage('1920x1080_HD_GRID_circles.png')
+blend = mpcdi.extractTextureImage('proj_a_blend.png')
+#blend = mpcdi.extractTextureImage('front_blend.png')
 
-mesh = PfmMesh2D(pfm, tex)
-card = BlendQuad(blend)
+gamma = 2.2
+#gamma = 1
+#mesh = PfmMesh2D(pfm, tex, blend, gamma)
+mesh = PfmTexLookup2D(pfm, tex, blend, gamma)
 
 def init():
-    tex.initGL()
-    blend.initGL()
     mesh.initGL()
-    card.initGL()
 
 def draw():
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glClear(GL_COLOR_BUFFER_BIT)
 
     mesh.draw()
-    card.draw()
 
     glutSwapBuffers()
 
@@ -56,7 +54,7 @@ def reshape(width, height):
 
 if __name__ == '__main__':
     glutInit(sys.argv)
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
+    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE)
 
     glutInitWindowPosition(0, 0)
     glutInitWindowSize(960, 540)

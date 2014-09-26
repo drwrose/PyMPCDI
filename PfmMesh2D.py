@@ -1,18 +1,25 @@
 from OpenGL.GL import *
+from BlendQuad import BlendQuad
 import numpy
 
 class PfmMesh2D:
-    """ This class creates a 2-d mesh out of the data in a pfm file.
-    Each non-NaN point in the pfm file becomes a vertex in the
-    mesh. """
+    """ This class creates a 2-d mesh out of the data in a pfm file,
+    and renders the input media on this mesh to compute the warping.
+    Each point in the pfm file becomes a vertex in the mesh.  Also see
+    PfmTexLookup2D for a different approach. """
 
-    def __init__(self, pfm, tex, offset, scale):
+    def __init__(self, pfm, tex, blend, gamma, offset, scale):
         self.pfm = pfm
         self.tex = tex
+        self.blendCard = BlendQuad(blend)
+        self.gamma = gamma
         self.offset = offset
         self.scale = scale
 
     def initGL(self):
+        self.tex.initGL()
+        self.blendCard.initGL()
+
         xSize = self.pfm.xSize
         ySize = self.pfm.ySize
 
@@ -60,6 +67,8 @@ class PfmMesh2D:
         glPushAttrib(GL_ENABLE_BIT)
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
 
+        # First, draw the mesh with the media texture applied.
+
         glMatrixMode(GL_TEXTURE)
         glPushMatrix()
         glLoadIdentity()
@@ -90,3 +99,14 @@ class PfmMesh2D:
         
         glPopClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
         glPopAttrib(GL_ENABLE_BIT)
+
+        # Now apply the blending map.
+
+        # We ought to apply the blending map in linear space, then
+        # re-apply the gamma curve; but this isn't really possible in
+        # the fixed-function pipeline.  So we just naively apply the
+        # blending map in gamma space, by multiplying the blending map
+        # as-is over the whole frame.  This actually isn't a terrible
+        # approach, and looks fine as long as the media is
+        # sufficiently bright.
+        self.blendCard.draw()
