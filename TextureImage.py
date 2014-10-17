@@ -21,10 +21,8 @@ class TextureImage:
 
     def initGL(self):
         img = self.__read()
-        if img.mode not in ['RGB', 'L']:
+        if img.mode not in ['RGB', 'L', 'I']:
             img = img.convert('RGB')
-            
-        img_data = numpy.fromstring(img.tostring(), dtype = 'uint8')
 
         self.texobj = glGenTextures(1)
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
@@ -35,16 +33,37 @@ class TextureImage:
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 
-        if img.mode == 'RGB':
-            format = GL_RGB
-        elif img.mode == 'L':
-            format = GL_LUMINANCE
+        if img.mode == 'I':
+            # PIL mode 'I': integer 32-bit pixels.  This is how PIL
+            # loads 16-bit image files.
+            img_data = numpy.fromstring(img.tostring(), dtype = 'uint32')
+            num_pixels = img.size[0] * img.size[1]
+            type = GL_UNSIGNED_SHORT
+            
+            if len(img_data) == num_pixels:
+                # Must be grayscale.
+                format = GL_LUMINANCE
+            elif len(img_data) == num_pixels * 3:
+                # Must be RGB.
+                format = GL_RGB
+            elif len(img_data) == num_pixels * 4:
+                # Must be RGBA.
+                format = GL_RGBA
+            else:
+                # What could it be?
+                assert False
         else:
-            assert False
+            # Otherwise, it's an 8-bit format.
+            type = GL_UNSIGNED_BYTE
+            if img.mode == 'RGB':
+                format = GL_RGB
+            elif img.mode == 'L':
+                format = GL_LUMINANCE
+            else:
+                assert False
+            img_data = numpy.fromstring(img.tostring(), dtype = 'uint8')
 
-        # Ideally, we would load 16-bit textures here if we could, but
-        # PIL doesn't appear to support that.
-        glTexImage2D(GL_TEXTURE_2D, 0, format, img.size[0], img.size[1], 0, format, GL_UNSIGNED_BYTE, img_data)
+        glTexImage2D(GL_TEXTURE_2D, 0, format, img.size[0], img.size[1], 0, format, type, img_data)
         
     def apply(self):
         glActiveTexture(GL_TEXTURE0)
