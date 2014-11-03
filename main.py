@@ -31,6 +31,10 @@ Options:
     -i mediaFilename
         Specify the media file to load and warp.  The default is a plain grid.
 
+    -o outputFilename
+        Specify an optional image filename to save the warped output
+        to.  The default is not to save it, only to display it.
+
     -r regionName
         Specify the name of a region to display.  If this is omitted,
         the first region encountered in the file is used.
@@ -96,6 +100,8 @@ def run():
         windowSize = region.XResolution, region.YResolution
 
     warp.setMediaFilename(mediaFilename)
+    if outputFilename:
+        warp.setOutputFilename(outputFilename)
 
     glutInit(sys.argv)
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE)
@@ -116,6 +122,7 @@ warp = None
 # Command-line parameters.
 mpcdiFilename = None
 mediaFilename = None
+outputFilename = None
 regionName = None
 mediaFilename = 'color_grid.png'
 targetGamma = None
@@ -123,7 +130,7 @@ useFixedFunction = False
 windowSize = None
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], 'm:i:r:s:g:fh')
+    opts, args = getopt.getopt(sys.argv[1:], 'm:i:o:r:s:g:fh')
 except getopt.error, msg:
     usage(1, msg)
 
@@ -132,6 +139,8 @@ for opt, arg in opts:
         mpcdiFilename = arg
     elif opt == '-i':
         mediaFilename = arg
+    elif opt == '-o':
+        outputFilename = arg
     elif opt == '-r':
         regionName = arg
     elif opt == '-s':

@@ -146,4 +146,8 @@ class MpacsWarp2DShader(MpacsWarp2D):
         glDrawArrays(GL_TRIANGLES, 0, 6)
 
         glUseProgram(0)
+
         glPopClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
+
+        self.saveOutputImage()
+

@@ -116,3 +116,6 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
         # target gamma).  This actually isn't a terrible approach, and
         # looks fine as long as the media is sufficiently bright.
         self.blendCard.draw()
+
+        self.saveOutputImage()
+        
