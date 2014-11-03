@@ -1,6 +1,7 @@
 from TextureImage import TextureImage
 from OpenGL.GL import *
 from PIL import Image
+import sys
 
 class MpacsWarp2D:
     """ The base class for performing warping in the "2d" profile
@@ -13,6 +14,8 @@ class MpacsWarp2D:
 
         # This class only supports the "2d" profile.
         assert self.mpcdi.profile == '2d'
+
+        self.windowSize = self.region.XResolution, self.region.YResolution        
 
         self.mediaFilename = None
         self.media = None
@@ -30,6 +33,9 @@ class MpacsWarp2D:
 
         # This is the gamma value of the source media image.
         self.mediaGamma = self.blendGamma
+
+    def setWindowSize(self, windowSize):
+        self.windowSize = windowSize
         
     def setMediaFilename(self, mediaFilename):
         self.mediaFilename = mediaFilename
@@ -45,16 +51,16 @@ class MpacsWarp2D:
         
         external_format = GL_RGBA
         component_type = GL_UNSIGNED_BYTE
-        width = self.region.XResolution
-        height = self.region.YResolution        
+        width, height = self.windowSize
         buffer = glReadPixels(0, 0, width, height, external_format, component_type)
         img = Image.fromstring(mode="RGBA", size=(width, height), data = buffer)
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
         img.save(self.outputFilename)
         print self.outputFilename
 
-        # Don't do this again next frame; just do it once.
-        self.outputFilename = None
+        # If we saved the frame, just exit now.  Don't bother to hold
+        # the window open.
+        sys.exit(0)
 
     def initGL(self):
         self.media.initGL()

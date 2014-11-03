@@ -69,6 +69,9 @@ def key(k, x, y):
     sys.exit(0)
 
 def reshape(width, height):
+    print "reshaped to %s, %s" % (width, height)
+    warp.setWindowSize((width, height))
+    
     h = float(height) / float(width);
     glViewport(0, 0, width, height)
 
@@ -99,6 +102,7 @@ def run():
     if not windowSize:
         windowSize = region.XResolution, region.YResolution
 
+    warp.setWindowSize(windowSize)
     warp.setMediaFilename(mediaFilename)
     if outputFilename:
         warp.setOutputFilename(outputFilename)
