@@ -108,10 +108,20 @@ def run():
         warp.setOutputFilename(outputFilename)
 
     glutInit(sys.argv)
-    glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE)
+    displayMode = GLUT_RGB | GLUT_DOUBLE
+    glutInitDisplayMode(displayMode)
 
     glutInitWindowSize(*windowSize)
     glutCreateWindow(regionName)
+
+    if outputFilename:
+        # Hiding the window may allow it to be larger than the
+        # desktop, which is useful if we're saving the output to disk.
+        # Caution: not sure if this works in all environments; it's
+        # possible some platforms will fail to render to a hidden
+        # window.
+        glutHideWindow()
+
     warp.initGL()
     
     glutDisplayFunc(draw)
