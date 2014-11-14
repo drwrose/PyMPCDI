@@ -179,7 +179,7 @@ for opt, arg in opts:
 
 if currentWindow is defaultWindowParams:
     # No regionName has been specified, so no explicit Window object
-    # use created; use the default.
+    # was created; use the default.
     windows.append(currentWindow)
 
 for window in windows:
