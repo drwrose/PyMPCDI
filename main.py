@@ -1,6 +1,7 @@
 from MpcdiFile import MpcdiFile
 import sys
 import getopt
+import copy
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 
@@ -28,16 +29,20 @@ Options:
     -m mpcdiFilename
         Specify the mpcdi file.  This is required.
 
+    -r regionName
+        Specify the name of a region to display.  If this is omitted,
+        the first region encountered in the file is used.  This option
+        may be repeated to display multiple regions; if it is
+        repeated, then any other options that precede the first -r
+        apply to all regions, and options that follow each -r apply
+        only to that particular region.
+
     -i mediaFilename
         Specify the media file to load and warp.  The default is a plain grid.
 
     -o outputFilename
         Specify an optional image filename to save the warped output
         to.  The default is not to save it, only to display it.
-
-    -r regionName
-        Specify the name of a region to display.  If this is omitted,
-        the first region encountered in the file is used.
 
     -s width,height
         Specify the size of the window.
@@ -57,91 +62,93 @@ def usage(code, msg = ''):
     print >> sys.stderr, msg
     sys.exit(code)
 
-def draw():
-    glClear(GL_COLOR_BUFFER_BIT)
+class Window:
+    def __init__(self):
+        # Command-line parameters.
+        self.mpcdiFilename = None
+        self.mediaFilename = None
+        self.outputFilename = None
+        self.regionName = None
+        self.mediaFilename = 'color_grid.png'
+        self.targetGamma = None
+        self.useFixedFunction = False
+        self.windowSize = None
 
-    warp.draw()
-
-    glutSwapBuffers()
-
-def key(k, x, y):
-    # If any key is pressed, close the window and exit.
-    sys.exit(0)
-
-def reshape(width, height):
-    print "reshaped to %s, %s" % (width, height)
-    warp.setWindowSize((width, height))
-    
-    h = float(height) / float(width);
-    glViewport(0, 0, width, height)
-
-    glMatrixMode(GL_PROJECTION)
-    glLoadIdentity()
-    glOrtho(0, 1, 1, 0, -100, 100)
-
-    glMatrixMode(GL_MODELVIEW)
-    glLoadIdentity()
-
-def run():
-    global regionName, windowSize, warp
-    
-    mpcdi = MpcdiFile(mpcdiFilename)
-    if not regionName:
-        regionName = mpcdi.regionIdList[0]
-
-    region = mpcdi.regions[regionName]
-
-    if useFixedFunction:
-        warp = MpacsWarp2DFixedFunction(mpcdi, region)
-    else:
-        warp = MpacsWarp2DShader(mpcdi, region)
-
-    if targetGamma is not None:
-        warp.targetGamma = targetGamma
+        # MPCDI file.
+        self.mpcdi = None
         
-    if not windowSize:
-        windowSize = region.XResolution, region.YResolution
+        # Warping object.
+        self.warp = None
 
-    warp.setWindowSize(windowSize)
-    warp.setMediaFilename(mediaFilename)
-    if outputFilename:
-        warp.setOutputFilename(outputFilename)
+    def draw(self):
+        glClear(GL_COLOR_BUFFER_BIT)
+        self.warp.draw()
+        glutSwapBuffers()
 
-    glutInit(sys.argv)
-    displayMode = GLUT_RGB | GLUT_DOUBLE
-    glutInitDisplayMode(displayMode)
+    def key(self, k, x, y):
+        # If any key is pressed, close the window and exit.
+        sys.exit(0)
 
-    glutInitWindowSize(*windowSize)
-    glutCreateWindow(regionName)
+    def reshape(self, width, height):
+        print "%s reshaped to %s, %s" % (self.regionName, width, height)
+        self.warp.setWindowSize((width, height))
 
-    if outputFilename:
-        # Hiding the window may allow it to be larger than the
-        # desktop, which is useful if we're saving the output to disk.
-        # Caution: not sure if this works in all environments; it's
-        # possible some platforms will fail to render to a hidden
-        # window.
-        glutHideWindow()
+        h = float(height) / float(width);
+        glViewport(0, 0, width, height)
 
-    warp.initGL()
-    
-    glutDisplayFunc(draw)
-    glutReshapeFunc(reshape)
-    glutKeyboardFunc(key)
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        glOrtho(0, 1, 1, 0, -100, 100)
 
-    glutMainLoop()
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
 
-# Global warping object.
-warp = None
+    def setupDisplay(self):
+        self.mpcdi = MpcdiFile(self.mpcdiFilename)
+        if not self.regionName:
+            self.regionName = self.mpcdi.regionIdList[0]
 
-# Command-line parameters.
-mpcdiFilename = None
-mediaFilename = None
-outputFilename = None
-regionName = None
-mediaFilename = 'color_grid.png'
-targetGamma = None
-useFixedFunction = False
-windowSize = None
+        self.region = self.mpcdi.regions[self.regionName]
+
+        if self.useFixedFunction:
+            self.warp = MpacsWarp2DFixedFunction(self.mpcdi, self.region)
+        else:
+            self.warp = MpacsWarp2DShader(self.mpcdi, self.region)
+
+        if self.targetGamma is not None:
+            warp.targetGamma = self.targetGamma
+
+        if not self.windowSize:
+            self.windowSize = self.region.XResolution, self.region.YResolution
+
+        self.warp.setWindowSize(self.windowSize)
+        self.warp.setMediaFilename(self.mediaFilename)
+        if self.outputFilename:
+            warp.setOutputFilename(self.outputFilename)
+
+        displayMode = GLUT_RGB | GLUT_DOUBLE
+        glutInitDisplayMode(displayMode)
+
+        glutInitWindowSize(*self.windowSize)
+        self.windowId = glutCreateWindow(self.regionName)
+
+        if self.outputFilename:
+            # Hiding the window may allow it to be larger than the
+            # desktop, which is useful if we're saving the output to disk.
+            # Caution: not sure if this works in all environments; it's
+            # possible some platforms will fail to render to a hidden
+            # window.
+            glutHideWindow()
+
+        self.warp.initGL()
+
+        glutDisplayFunc(self.draw)
+        glutReshapeFunc(self.reshape)
+        glutKeyboardFunc(self.key)
+
+defaultWindowParams = Window()
+currentWindow = defaultWindowParams
+windows = []
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], 'm:i:o:r:s:g:fh')
@@ -150,24 +157,38 @@ except getopt.error, msg:
 
 for opt, arg in opts:
     if opt == '-m':
-        mpcdiFilename = arg
+        currentWindow.mpcdiFilename = arg
     elif opt == '-i':
-        mediaFilename = arg
+        currentWindow.mediaFilename = arg
     elif opt == '-o':
-        outputFilename = arg
+        currentWindow.outputFilename = arg
     elif opt == '-r':
-        regionName = arg
+        # Each occurrence of -r defines a new region.  The parameters
+        # following -r apply to the region we just named.
+        currentWindow = copy.copy(defaultWindowParams)
+        windows.append(currentWindow)
+        currentWindow.regionName = arg
     elif opt == '-s':
-        windowSize = map(int, arg.split(','))
+        currentWindow.windowSize = map(int, arg.split(','))
     elif opt == '-g':
-        targetGamma = float(arg)
+        currentWindow.targetGamma = float(arg)
     elif opt == '-f':
-        useFixedFunction = True
+        currentWindow.useFixedFunction = True
     elif opt == '-h':
         usage(0)
-    
-if not mpcdiFilename:
-    print >> sys.stderr, "No mpcdi filename specified.  Use -h for help."
-    sys.exit(1)
 
-run()
+if currentWindow is defaultWindowParams:
+    # No regionName has been specified, so no explicit Window object
+    # use created; use the default.
+    windows.append(currentWindow)
+
+for window in windows:
+    if not window.mpcdiFilename:
+        print >> sys.stderr, "No mpcdi filename specified.  Use -h for help."
+        sys.exit(1)
+
+glutInit(sys.argv)
+for window in windows:
+    window.setupDisplay()
+glutMainLoop()
+
