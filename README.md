@@ -18,7 +18,7 @@ itself, though it can be useful to sanity-check mpcdi files.
 It is a command-line program.  To use it, open a command-line or
 terminal window, change to the source directory, and type the command:
 
-python main.py myfile.mpcdi region_name
+python main.py -m myfile.mpcdi -r region_name
 
 where myfile.mpcdi is the fully-specified path to your mpcdi file, and
 region_name is the name of one of the regions in the file.  The
