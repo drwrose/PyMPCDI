@@ -1,4 +1,4 @@
-mpcdi
+PyMPCDI
 =====
 
 This program provides a bare-bones OpenGL implementation of the 2-D
