@@ -124,7 +124,7 @@ class Window:
         self.warp.setWindowSize(self.windowSize)
         self.warp.setMediaFilename(self.mediaFilename)
         if self.outputFilename:
-            warp.setOutputFilename(self.outputFilename)
+            self.warp.setOutputFilename(self.outputFilename)
 
         displayMode = GLUT_RGB | GLUT_DOUBLE
         glutInitDisplayMode(displayMode)
