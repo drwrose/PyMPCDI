@@ -18,7 +18,7 @@ class MpcdiFile:
     def read(self, filename):
         """ Reads the mpcdi file and sets up the corresponding data
         structures internally. """
-        
+
         self.filename = filename
         self.zip = zipfile.ZipFile(self.filename, 'r')
         docData = self.extractSubfile('mpcdi.xml')
@@ -28,7 +28,7 @@ class MpcdiFile:
         self.buffers = {}
         self.regions = {}
         self.regionIdList = []  # sorted in file order
-        
+
         self.profile = self.doc.attrib['profile']
 
         xdisplay = self.doc.find('display')
@@ -50,7 +50,7 @@ class MpcdiFile:
     def extractSubfile(self, filename):
         """ Returns the string data from the subfile within the mpcdi
         file with the given name. """
-        
+
         return self.zip.read(filename)
 
     def extractPfmFile(self, filename):
@@ -72,7 +72,7 @@ class BufferDef:
         self.id = xbuffer.attrib['id']
 
         # Integer properties
-        for keyword in ['XResolution', 'YResolution']:
+        for keyword in ['Xresolution', 'Yresolution']:
             value = xbuffer.attrib[keyword]
             if value:
                 value = int(value)
@@ -82,11 +82,11 @@ class RegionDef:
     def __init__(self, buffer, xregion):
         self.buffer = buffer
         self.id = xregion.attrib['id']
-        self.XResolution = None
-        self.YResolution = None
+        self.Xresolution = None
+        self.Yresolution = None
 
         # Integer properties
-        for keyword in ['XResolution', 'YResolution']:
+        for keyword in ['Xresolution', 'Yresolution']:
             value = xregion.attrib[keyword]
             if value:
                 value = int(value)
@@ -130,7 +130,7 @@ class FileDef:
             else:
                 value = None
             setattr(self, keyword, value)
-            
+
         # Float properties
         for keyword in ['gammaEmbedded']:
             xe = xfile.find(keyword)
