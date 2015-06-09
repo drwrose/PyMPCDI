@@ -15,7 +15,7 @@ class MpacsWarp2D:
         # This class only supports the "2d" profile.
         assert self.mpcdi.profile == '2d'
 
-        self.windowSize = self.region.XResolution, self.region.YResolution        
+        self.windowSize = self.region.Xresolution, self.region.Yresolution
 
         self.mediaFilename = None
         self.media = None

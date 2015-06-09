@@ -119,7 +119,7 @@ class Window:
             warp.targetGamma = self.targetGamma
 
         if not self.windowSize:
-            self.windowSize = self.region.XResolution, self.region.YResolution
+            self.windowSize = self.region.Xresolution, self.region.Yresolution
 
         self.warp.setWindowSize(self.windowSize)
         self.warp.setMediaFilename(self.mediaFilename)
