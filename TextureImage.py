@@ -3,6 +3,8 @@ from OpenGL.GL import *
 from cStringIO import StringIO
 import numpy
 
+useMipmapping = False
+
 class TextureImage:
     """ A basic 2-d OpenGL texture image, as loaded from (for instance) a png file. """
     
@@ -32,9 +34,14 @@ class TextureImage:
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
-        # Enable mipmapping to soften out the subsampling artifacts.
-        glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE)
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+        if useMipmapping:
+            # Enable mipmapping (i.e. trilinear filtering) to soften
+            # out the subsampling artifacts.
+            glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE)
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+        else:
+            # Just use bilinear filtering.
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 
         if img.mode == 'I':
             # PIL mode 'I': integer 32-bit pixels.  This is how PIL

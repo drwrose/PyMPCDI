@@ -4,6 +4,7 @@ import getopt
 import copy
 from OpenGL.GL import *
 from OpenGL.GLUT import *
+import TextureImage
 
 from MpacsWarp2DShader import MpacsWarp2DShader
 from MpacsWarp2DFixedFunction import MpacsWarp2DFixedFunction
@@ -49,6 +50,10 @@ Options:
 
     -g gamma
         Specify the gamma response curve of the target display device.
+
+    -M
+        Enable mipmapping.  Without this option simple bilinear
+        filtering is used instead.
 
     -f
         Use the fixed-function implementation instead of the
@@ -151,7 +156,7 @@ currentWindow = defaultWindowParams
 windows = []
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], 'm:i:o:r:s:g:fh')
+    opts, args = getopt.getopt(sys.argv[1:], 'm:i:o:r:s:g:fMh')
 except getopt.error, msg:
     usage(1, msg)
 
@@ -174,6 +179,8 @@ for opt, arg in opts:
         currentWindow.targetGamma = float(arg)
     elif opt == '-f':
         currentWindow.useFixedFunction = True
+    elif opt == '-M':
+        TextureImage.useMipmapping = True
     elif opt == '-h':
         usage(0)
 
