@@ -9,17 +9,17 @@ class BlendQuad:
 
     def initGL(self):
         self.blend.initGL()
-        
+
         # Create a VBO with two triangles to make a unit quad.
         verts = [
-            [0, 1], [1, 0], [1, 1], 
+            [0, 1], [1, 0], [1, 1],
             [0, 1], [1, 0], [0, 0],
             ]
         verts = numpy.array(verts, dtype = 'float32')
         self.vertdata = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, self.vertdata)
         glBufferData(GL_ARRAY_BUFFER, verts, GL_STATIC_DRAW)
-        
+
     def draw(self):
         glPushAttrib(GL_ENABLE_BIT)
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
@@ -39,6 +39,5 @@ class BlendQuad:
 
         glDrawArrays(GL_TRIANGLES, 0, 6)
 
-        glPopClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
-        glPopAttrib(GL_ENABLE_BIT)
-        
+        glPopClientAttrib()
+        glPopAttrib()

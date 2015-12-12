@@ -14,17 +14,23 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
 
     def __init__(self, mpcdi, region):
         MpacsWarp2D.__init__(self, mpcdi, region)
-        
+
         self.blendCard = BlendQuad(self.blend)
 
     def initGL(self):
         MpacsWarp2D.initGL(self)
         self.blendCard.initGL()
-        
+
         xSize = self.pfm.xSize
         ySize = self.pfm.ySize
 
-        uvs = numpy.fromstring(self.pfm.data, dtype = 'float32')
+        # Discard every third element of the UV data, which is mostly
+        # NaN's and isn't really useful, and can confuse OpenGL into
+        # ignoring the first two.
+        uv_list = numpy.fromstring(self.pfm.data, dtype = 'float32')
+        uvs3 = numpy.reshape(uv_list, (-1, 3), 'C')
+        uvs = uvs3[:,0:2]
+
         self.uvdata = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, self.uvdata)
         glBufferData(GL_ARRAY_BUFFER, uvs, GL_STATIC_DRAW)
@@ -45,9 +51,9 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
         glBufferData(GL_ARRAY_BUFFER, verts, GL_STATIC_DRAW)
 
         ## def has_point(xi, yi):
-        ##     if xi < xSize and y < ySize and 
+        ##     if xi < xSize and y < ySize and
 
-        tris = [] 
+        tris = []
         for yi in range(ySize - 1):
             for xi in range(xSize - 1):
                 vi0 = ((xi) + (yi) * xSize);
@@ -63,7 +69,7 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
         self.idata = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, self.idata)
         glBufferData(GL_ARRAY_BUFFER, tris, GL_STATIC_DRAW)
-                
+
     def draw(self):
         glPushAttrib(GL_ENABLE_BIT)
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
@@ -85,7 +91,7 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
         glScale(self.region.xsize, self.region.ysize, 1.0)
 
         self.media.apply()
-        
+
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_TEXTURE_COORD_ARRAY)
 
@@ -93,7 +99,7 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
         glVertexPointer(2, GL_FLOAT, 0, None)
 
         glBindBuffer(GL_ARRAY_BUFFER, self.uvdata)
-        glTexCoordPointer(3, GL_FLOAT, 0, None)
+        glTexCoordPointer(2, GL_FLOAT, 0, None)
 
         glColor3f(1.0, 1.0, 1.0)
 
@@ -102,9 +108,9 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
 
         glMatrixMode(GL_TEXTURE)
         glPopMatrix()
-        
-        glPopClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
-        glPopAttrib(GL_ENABLE_BIT)
+
+        glPopClientAttrib()
+        glPopAttrib()
 
         # Now apply the blending map.
 
@@ -118,4 +124,3 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
         self.blendCard.draw()
 
         self.saveOutputImage()
-        

@@ -72,7 +72,14 @@ class MpacsWarp2DShader(MpacsWarp2D):
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, self.pfm.xSize, self.pfm.ySize, 0, GL_RGB, GL_FLOAT, self.pfm.data)
+        # Fill every third element of the UV data with zeroes, instead
+        # of the default NaN's which aren't really useful, and can
+        # confuse OpenGL into ignoring the first two.
+        uv_list = numpy.fromstring(self.pfm.data, dtype = 'float32')
+        uvs3 = numpy.reshape(uv_list, (-1, 3), 'C')
+        uvs3[:,2].fill(0)
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, self.pfm.xSize, self.pfm.ySize, 0, GL_RGB, GL_FLOAT, uvs3)
 
         # Create a VBO with two triangles to make a unit quad.
         verts = [
