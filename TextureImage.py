@@ -7,7 +7,7 @@ useMipmapping = False
 
 class TextureImage:
     """ A basic 2-d OpenGL texture image, as loaded from (for instance) a png file. """
-    
+
     def __init__(self, filename = None, data = None):
         self.filename = filename
         self.data = data
@@ -46,10 +46,10 @@ class TextureImage:
         if img.mode == 'I':
             # PIL mode 'I': integer 32-bit pixels.  This is how PIL
             # loads 16-bit image files.
-            img_data = numpy.fromstring(img.tostring(), dtype = 'uint32')
+            img_data = numpy.fromstring(img.tobytes(), dtype = 'uint32')
             num_pixels = img.size[0] * img.size[1]
             type = GL_UNSIGNED_SHORT
-            
+
             if len(img_data) == num_pixels:
                 # Must be grayscale.
                 format = GL_LUMINANCE
@@ -71,12 +71,11 @@ class TextureImage:
                 format = GL_LUMINANCE
             else:
                 assert False
-            img_data = numpy.fromstring(img.tostring(), dtype = 'uint8')
+            img_data = numpy.fromstring(img.tobytes(), dtype = 'uint8')
 
         glTexImage2D(GL_TEXTURE_2D, 0, format, img.size[0], img.size[1], 0, format, type, img_data)
-        
+
     def apply(self):
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, self.texobj)
         glEnable(GL_TEXTURE_2D)
-        

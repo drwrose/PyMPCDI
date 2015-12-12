@@ -2,6 +2,7 @@ import zipfile
 from xml.etree import ElementTree
 import PfmFile
 import TextureImage
+import os.path
 
 class MpcdiFile:
     def __init__(self, filename = None):
@@ -20,7 +21,13 @@ class MpcdiFile:
         structures internally. """
 
         self.filename = filename
-        self.zip = zipfile.ZipFile(self.filename, 'r')
+        if os.path.isdir(self.filename):
+            # Read a directory directly
+            self.zip = None
+        else:
+            # Read a zipfile via the ZipFile module
+            self.zip = zipfile.ZipFile(self.filename, 'r')
+
         docData = self.extractSubfile('mpcdi.xml')
         self.doc = ElementTree.fromstring(docData)
 
@@ -51,7 +58,10 @@ class MpcdiFile:
         """ Returns the string data from the subfile within the mpcdi
         file with the given name. """
 
-        return self.zip.read(filename)
+        if self.zip:
+            return self.zip.read(filename)
+        else:
+            return open(os.path.join(self.filename, filename), 'rb').read()
 
     def extractPfmFile(self, filename):
         """ Returns a PfmFile object corresponding to the named

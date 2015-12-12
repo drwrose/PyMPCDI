@@ -39,7 +39,7 @@ void main() {
   col.x = pow(col.x * blendLinear, 1.0 / targetGamma);
   col.y = pow(col.y * blendLinear, 1.0 / targetGamma);
   col.z = pow(col.z * blendLinear, 1.0 / targetGamma);
-  
+
   gl_FragColor = col;
 }
 """
@@ -47,7 +47,7 @@ void main() {
 class MpacsWarp2DShader(MpacsWarp2D):
     """
     Implements 2D warping via a shader pipeline.
-    
+
     This class creates a floating-point texture out of the data in
     a pfm file, and performs all of the warping and blending in the
     fragment shader via a two-step texture lookup.
@@ -76,7 +76,7 @@ class MpacsWarp2DShader(MpacsWarp2D):
 
         # Create a VBO with two triangles to make a unit quad.
         verts = [
-            [0, 1], [1, 0], [1, 1], 
+            [0, 1], [1, 0], [1, 1],
             [0, 1], [1, 0], [0, 0],
             ]
         verts = numpy.array(verts, dtype = 'float32')
@@ -142,12 +142,11 @@ class MpacsWarp2DShader(MpacsWarp2D):
         glBindBuffer(GL_ARRAY_BUFFER, self.vertdata)
         glVertexPointer(2, GL_FLOAT, 0, None)
         glTexCoordPointer(2, GL_FLOAT, 0, None)
-        
+
         glDrawArrays(GL_TRIANGLES, 0, 6)
 
         glUseProgram(0)
 
-        glPopClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
+        glPopClientAttrib()
 
         self.saveOutputImage()
-
