@@ -10,7 +10,7 @@ void main() {
 }
 """
 
-fragmentShader = """
+fragmentShaderWithBlend = """
 uniform sampler2D texture0, texture1, texture2;
 uniform float blendGamma, targetGamma, mediaGamma;
 uniform mat4 warpMat;
@@ -39,6 +39,31 @@ void main() {
   col.x = pow(col.x * blendLinear, 1.0 / targetGamma);
   col.y = pow(col.y * blendLinear, 1.0 / targetGamma);
   col.z = pow(col.z * blendLinear, 1.0 / targetGamma);
+
+  gl_FragColor = col;
+}
+"""
+
+fragmentShaderNoBlend = """
+uniform sampler2D texture0, texture1, texture2;
+uniform float blendGamma, targetGamma, mediaGamma;
+uniform mat4 warpMat;
+
+void main() {
+  // Look up the warped UV coordinate in the pfm texture . . .
+  vec4 uv = texture2D(texture0, gl_TexCoord[0].xy);
+
+  // . . . apply the specified transform . . .
+  uv = warpMat * uv;
+
+  // . . . and use that UV coordinate to look up the media color.
+  vec4 col = texture2D(texture1, uv.xy);
+
+  // Linearize the media color.  We could also pre-linearize the media
+  // by using an sRGB texture format.
+  col.x = pow(col.x, mediaGamma);
+  col.y = pow(col.y, mediaGamma);
+  col.z = pow(col.z, mediaGamma);
 
   gl_FragColor = col;
 }
@@ -113,7 +138,10 @@ class MpacsWarp2DShader(MpacsWarp2D):
 
         # Compile the shaders.
         vs = shaders.compileShader(vertexShader, GL_VERTEX_SHADER)
-        fs = shaders.compileShader(fragmentShader, GL_FRAGMENT_SHADER)
+        if self.includeBlend:
+            fs = shaders.compileShader(fragmentShaderWithBlend, GL_FRAGMENT_SHADER)
+        else:
+            fs = shaders.compileShader(fragmentShaderNoBlend, GL_FRAGMENT_SHADER)
         self.shader = shaders.compileProgram(vs, fs)
 
         self.texture0Loc = glGetUniformLocation(self.shader, 'texture0')

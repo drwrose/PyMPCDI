@@ -51,6 +51,9 @@ Options:
     -g gamma
         Specify the gamma response curve of the target display device.
 
+    -b
+        Omit the blend maps from the rendered result.
+
     -M
         Enable mipmapping.  Without this option simple bilinear
         filtering is used instead.
@@ -79,6 +82,7 @@ class Window:
         self.targetGamma = None
         self.useFixedFunction = False
         self.windowSize = None
+        self.includeBlend = None
 
         # MPCDI file.
         self.mpcdi = None
@@ -151,7 +155,10 @@ class Window:
             self.warp = MpacsWarp2DShader(self.mpcdi, self.region)
 
         if self.targetGamma is not None:
-            warp.targetGamma = self.targetGamma
+            self.warp.targetGamma = self.targetGamma
+
+        if self.includeBlend is not None:
+            self.warp.includeBlend = self.includeBlend
 
         if not self.windowSize:
             self.windowSize = self.region.Xresolution, self.region.Yresolution
@@ -190,7 +197,7 @@ currentWindow = defaultWindowParams
 windows = []
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], 'm:i:o:r:s:g:fMh')
+    opts, args = getopt.getopt(sys.argv[1:], 'm:i:o:r:s:g:bfMh')
 except getopt.error, msg:
     usage(1, msg)
 
@@ -222,6 +229,8 @@ for opt, arg in opts:
         currentWindow.windowSize = map(int, arg.split(','))
     elif opt == '-g':
         currentWindow.targetGamma = float(arg)
+    elif opt == '-b':
+        currentWindow.includeBlend = False
     elif opt == '-f':
         currentWindow.useFixedFunction = True
     elif opt == '-M':

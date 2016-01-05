@@ -112,15 +112,16 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
         glPopClientAttrib()
         glPopAttrib()
 
-        # Now apply the blending map.
+        if self.includeBlend:
+            # Now apply the blending map.
 
-        # We ought to apply the blending map in linear space, then
-        # re-apply the gamma curve; but this isn't really possible in
-        # the fixed-function pipeline.  So we just naively apply the
-        # blending map to the warp by multiplying it as-is over the
-        # whole frame (assuming that it's been pre-scaled with the
-        # target gamma).  This actually isn't a terrible approach, and
-        # looks fine as long as the media is sufficiently bright.
-        self.blendCard.draw()
+            # We ought to apply the blending map in linear space, then
+            # re-apply the gamma curve; but this isn't really possible in
+            # the fixed-function pipeline.  So we just naively apply the
+            # blending map to the warp by multiplying it as-is over the
+            # whole frame (assuming that it's been pre-scaled with the
+            # target gamma).  This actually isn't a terrible approach, and
+            # looks fine as long as the media is sufficiently bright.
+            self.blendCard.draw()
 
         self.saveOutputImage()

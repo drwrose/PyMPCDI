@@ -21,6 +21,7 @@ class MpacsWarp2D:
         self.media = None
 
         self.outputFilename = None
+        self.includeBlend = True
 
         self.pfm = self.mpcdi.extractPfmFile(self.region.geometryWarpFile.path)
         self.blend = self.mpcdi.extractTextureImage(self.region.alphaMap.path)
