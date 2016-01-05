@@ -7,7 +7,7 @@ class MpacsWarp2D:
     """ The base class for performing warping in the "2d" profile
     specified in the mpcdi file.  This warps media according to a 2-d
     pfm file and applies a blending map. """
-    
+
     def __init__(self, mpcdi, region):
         self.mpcdi = mpcdi
         self.region = region
@@ -36,11 +36,11 @@ class MpacsWarp2D:
 
     def setWindowSize(self, windowSize):
         self.windowSize = windowSize
-        
+
     def setMediaFilename(self, mediaFilename):
         self.mediaFilename = mediaFilename
         self.media = TextureImage(self.mediaFilename)
-        
+
     def setOutputFilename(self, outputFilename):
         self.outputFilename = outputFilename
 
@@ -48,21 +48,15 @@ class MpacsWarp2D:
         """ Saves a screenshot to the indicated filename for reference. """
         if not self.outputFilename:
             return
-        
+
         external_format = GL_RGBA
         component_type = GL_UNSIGNED_BYTE
         width, height = self.windowSize
         buffer = glReadPixels(0, 0, width, height, external_format, component_type)
-        img = Image.fromstring(mode="RGBA", size=(width, height), data = buffer)
+        img = Image.frombytes(mode="RGBA", size=(width, height), data = buffer)
         img = img.transpose(Image.FLIP_TOP_BOTTOM)
         img.save(self.outputFilename)
         print self.outputFilename
 
-        # If we saved the frame, just exit now.  Don't bother to hold
-        # the window open.
-        sys.exit(0)
-
     def initGL(self):
         self.media.initGL()
-
-        

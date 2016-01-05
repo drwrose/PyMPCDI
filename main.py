@@ -58,7 +58,7 @@ Options:
     -f
         Use the fixed-function implementation instead of the
         shader-based implementation.
-        
+
 """
 
 
@@ -73,6 +73,7 @@ class Window:
         self.mpcdiFilename = None
         self.mediaFilename = None
         self.outputFilename = None
+        self.useFbo = False
         self.regionName = None
         self.mediaFilename = 'color_grid.png'
         self.targetGamma = None
@@ -81,13 +82,16 @@ class Window:
 
         # MPCDI file.
         self.mpcdi = None
-        
+
         # Warping object.
         self.warp = None
 
-    def draw(self):
+    def draw_bg(self):
         glClear(GL_COLOR_BUFFER_BIT)
         self.warp.draw()
+
+    def draw(self):
+        self.draw_bg()
         glutSwapBuffers()
 
     def key(self, k, x, y):
@@ -95,7 +99,13 @@ class Window:
         sys.exit(0)
 
     def reshape(self, width, height):
-        print "%s reshaped to %s, %s" % (self.regionName, width, height)
+        if self.useFbo:
+            # In this case we insist on keeping the actual buffer
+            # size, because we're rendering to a buffer that's not
+            # necessarily attached to the window anyway.
+            width, height = self.windowSize
+
+        print "%s rendering at size %s, %s" % (self.regionName, width, height)
         self.warp.setWindowSize((width, height))
 
         h = float(height) / float(width);
@@ -108,8 +118,28 @@ class Window:
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
+    def setupFbo(self):
+        # All we need is a color buffer.
+        self.rbobj = glGenRenderbuffers(1)
+        glBindRenderbuffer(GL_RENDERBUFFER, self.rbobj)
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8,
+                              self.windowSize[0], self.windowSize[1])
+
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+        self.fbobj = glGenFramebuffers(1)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.fbobj)
+
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                  GL_RENDERBUFFER, self.rbobj)
+
+        status = glCheckFramebufferStatus(GL_FRAMEBUFFER)
+        assert(status == GL_FRAMEBUFFER_COMPLETE)
+
     def setupDisplay(self):
-        self.mpcdi = MpcdiFile(self.mpcdiFilename)
+
         if not self.regionName:
             self.regionName = self.mpcdi.regionIdList[0]
 
@@ -130,20 +160,24 @@ class Window:
         self.warp.setMediaFilename(self.mediaFilename)
         if self.outputFilename:
             self.warp.setOutputFilename(self.outputFilename)
+            self.useFbo = True
 
         displayMode = GLUT_RGB | GLUT_DOUBLE
         glutInitDisplayMode(displayMode)
 
-        glutInitWindowSize(*self.windowSize)
+        if not self.outputFilename:
+            glutInitWindowSize(*self.windowSize)
+        if self.useFbo:
+            glutInitWindowPosition(4000, 4000)
+        else:
+            glutInitWindowPosition(-1, -1)
+
         self.windowId = glutCreateWindow(self.regionName)
 
-        if self.outputFilename:
-            # Hiding the window may allow it to be larger than the
-            # desktop, which is useful if we're saving the output to disk.
-            # Caution: not sure if this works in all environments; it's
-            # possible some platforms will fail to render to a hidden
-            # window.
-            glutHideWindow()
+        if self.useFbo:
+            # If we're using an FBO to render, we don't need an
+            # onscreen window.
+            self.setupFbo()
 
         self.warp.initGL()
 
@@ -160,9 +194,20 @@ try:
 except getopt.error, msg:
     usage(1, msg)
 
+# A global table of MPCDI files read from disk.
+mpcdis = {}
+
+def readMpcdi(mpcdiFilename):
+    mpcdi = mpcdis.setdefault(mpcdiFilename, None)
+    if mpcdi is None:
+        mpcdi = MpcdiFile(mpcdiFilename)
+        mpcdis[mpcdiFilename] = mpcdi
+    return mpcdi
+
 for opt, arg in opts:
     if opt == '-m':
         currentWindow.mpcdiFilename = arg
+        currentWindow.mpcdi = readMpcdi(arg)
     elif opt == '-i':
         currentWindow.mediaFilename = arg
     elif opt == '-o':
@@ -195,7 +240,14 @@ for window in windows:
         sys.exit(1)
 
 glutInit(sys.argv)
+allOutputFilename = True
 for window in windows:
     window.setupDisplay()
-glutMainLoop()
+    if not window.outputFilename:
+        allOutputFilename = False
 
+if allOutputFilename:
+    # If everything is going to disk, quit after one frame.
+    glutIdleFunc(sys.exit)
+
+glutMainLoop()

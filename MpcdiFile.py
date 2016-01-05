@@ -21,6 +21,8 @@ class MpcdiFile:
         structures internally. """
 
         self.filename = filename
+        print "Reading %s" % (self.filename)
+
         if os.path.isdir(self.filename):
             # Read a directory directly
             self.zip = None
@@ -117,6 +119,8 @@ class RegionDef:
         xframe = xregion.find('coordinateFrame')
         if xframe:
             self.frame = FrameDef(xframe)
+
+        print "Found region %s of size %s, %s" % (self.id, self.Xresolution, self.Yresolution)
 
     def addFileset(self, xfileset):
         for keyword in ['geometryWarpFile', 'alphaMap', 'distortionMap']:
