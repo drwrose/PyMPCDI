@@ -175,7 +175,7 @@ class Window:
         if not self.outputFilename:
             glutInitWindowSize(*self.windowSize)
         if self.useFbo:
-            glutInitWindowPosition(4000, 4000)
+            glutInitWindowPosition(12000, 12000)  # probably this is offscreen.
         else:
             glutInitWindowPosition(-1, -1)
 
