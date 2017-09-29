@@ -90,6 +90,35 @@ class BufferDef:
                 value = int(value)
             setattr(self, keyword, value)
 
+class FrustumDef:
+    def __init__(self, xfrustum):
+
+        # Float properties, children of the element
+        for keyword in ['yaw', 'pitch', 'roll', 'leftAngle', 'rightAngle', 'downAngle', 'upAngle']:
+            value = None
+            xchild = xfrustum.find(keyword)
+            if xchild is not None:
+                value = xchild.text
+                if value:
+                    value = float(value)
+            setattr(self, keyword, value)
+
+class FrameDef:
+    def __init__(self, xframe):
+
+        # Float properties, children of the element
+        for keyword in ['posx', 'posy', 'posz',
+                        'yawx', 'yawy', 'yawz',
+                        'pitchx', 'pitchy', 'pitchz',
+                        'rollx', 'rolly', 'rollz']:
+            value = None
+            xchild = xframe.find(keyword)
+            if xchild is not None:
+                value = xchild.text
+                if value:
+                    value = float(value)
+            setattr(self, keyword, value)
+
 class RegionDef:
     def __init__(self, buffer, xregion):
         self.buffer = buffer

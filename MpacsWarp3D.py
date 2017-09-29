@@ -4,10 +4,10 @@ from OpenGL.GL import *
 from PIL import Image
 import sys
 
-class MpacsWarp2D(MpacsWarp):
-    """ The base class for performing warping in the "2d" profile
-    specified in the mpcdi file.  This warps media according to a 2-d
-    pfm file and applies a blending map. """
+class MpacsWarp3D(MpacsWarp):
+    """ The base class for performing warping in the "3d", "a3", and
+    "sl" profiles specified in the mpcdi file.  The media file in this
+    case is an obj file describing a simple 3-D scene. """
 
     def __init__(self, mpcdi, region):
         MpacsWarp.__init__(self, mpcdi, region)
@@ -17,11 +17,6 @@ class MpacsWarp2D(MpacsWarp):
 
         self.mediaFilename = None
         self.media = None
-
-        # This is the gamma value of the source media image.
-        self.mediaGamma = self.blendGamma
-
-        self.pfm = self.mpcdi.extractPfmFile(self.region.geometryWarpFile.path)
 
     def setMediaFilename(self, mediaFilename):
         self.mediaFilename = mediaFilename
