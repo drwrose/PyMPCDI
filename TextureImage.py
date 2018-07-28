@@ -8,16 +8,19 @@ useMipmapping = False
 class TextureImage:
     """ A basic 2-d OpenGL texture image, as loaded from (for instance) a png file. """
 
-    def __init__(self, filename = None, data = None):
+    def __init__(self, filename = None, data = None, flat = None):
         self.filename = filename
         self.data = data
         self.texobj = None
+        self.flat = flat
 
     def __read(self):
         if self.data:
             return Image.open(StringIO(self.data))
         if self.filename:
             return Image.open(self.filename)
+        if self.flat:
+            return Image.new(*self.flat)
 
         assert False
 

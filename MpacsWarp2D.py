@@ -24,10 +24,13 @@ class MpacsWarp2D:
         self.includeBlend = True
 
         self.pfm = self.mpcdi.extractPfmFile(self.region.geometryWarpFile.path)
-        self.blend = self.mpcdi.extractTextureImage(self.region.alphaMap.path)
-
-        # This is the gamma value of the embedded alpha map.
-        self.blendGamma = self.region.alphaMap.gammaEmbedded
+        if self.region.alphaMap:
+            self.blend = self.mpcdi.extractTextureImage(self.region.alphaMap.path)
+            # This is the gamma value of the embedded alpha map.
+            self.blendGamma = self.region.alphaMap.gammaEmbedded
+        else:
+            self.blend = TextureImage(flat = ('L', (self.pfm.xSize, self.pfm.ySize), 255))
+            self.blendGamma = 1.0
 
         # This is the gamma value we will want to display.
         self.targetGamma = self.blendGamma
