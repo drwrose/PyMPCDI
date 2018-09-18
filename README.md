@@ -15,10 +15,22 @@ This program is intended primarily to serve as a reference
 implementation, and not so much to provide a useful function in
 itself, though it can be useful to sanity-check mpcdi files.
 
+## Dependencies
+Install required dependencies using `pip` by running:
+```
+pip install -r requirements.txt
+```
+
+**NOTE:** If PyOpenGL is installed with pip, it also requires freeglut runtime dll to be installed and in the
+PATH environment variable or that the `freeglut.dll` to be in this directory
+
+## Run program
 It is a command-line program.  To use it, open a command-line or
 terminal window, change to the source directory, and type the command:
 
+```
 python main.py -m myfile.mpcdi -r region_name
+```
 
 where myfile.mpcdi is the fully-specified path to your mpcdi file, and
 region_name is the name of one of the regions in the file.  The
@@ -26,6 +38,6 @@ program will open a single window that renders the contents of
 region_name.
 
 To list more options, type the command:
-
+```
 python main.py -h
-
+```
