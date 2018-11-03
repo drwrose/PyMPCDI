@@ -123,7 +123,7 @@ class RegionDef:
         print "Found region %s of size %s, %s" % (self.id, self.Xresolution, self.Yresolution)
 
     def addFileset(self, xfileset):
-        for keyword in ['geometryWarpFile', 'alphaMap', 'distortionMap']:
+        for keyword in ['geometryWarpFile', 'alphaMap', 'betaMap', 'distortionMap']:
             xfile = xfileset.find(keyword, None)
             if xfile is not None:
                 file = FileDef(xfile)

@@ -15,7 +15,10 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
     def __init__(self, mpcdi, region):
         MpacsWarp2D.__init__(self, mpcdi, region)
 
-        self.blendCard = BlendQuad(self.blend)
+        self.blendCard = BlendQuad(self.alpha)
+
+        # We don't attempt to do beta-map processing in the
+        # fixed-function renderer, only alpha-map processing.
 
     def initGL(self):
         MpacsWarp2D.initGL(self)
