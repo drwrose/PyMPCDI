@@ -29,6 +29,14 @@ class TextureImage:
         if img.mode not in ['RGB', 'L', 'I']:
             img = img.convert('RGB')
 
+        max_texture_size = glGetIntegerv(GL_MAX_TEXTURE_SIZE);
+        if img.size[0] > max_texture_size or img.size[1] > max_texture_size:
+            new_size = (min(max_texture_size, img.size[0]),
+                        min(max_texture_size, img.size[1]))
+
+            print "Resizing image from %s to %s due to OpenGL limits" % (img.size, new_size)
+            img = img.resize(new_size, Image.BILINEAR)
+
         self.texobj = glGenTextures(1)
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
         glBindTexture(GL_TEXTURE_2D, self.texobj)
