@@ -4,11 +4,11 @@ import numpy
 class BlendQuad:
     """ A single 1x1 quad drawn over the screen, for applying a blending map. """
 
-    def __init__(self, blend):
-        self.blend = blend
+    def __init__(self, alpha):
+        self.alpha = alpha
 
     def initGL(self):
-        self.blend.initGL()
+        self.alpha.initGL()
 
         # Create a VBO with two triangles to make a unit quad.
         verts = [
@@ -23,7 +23,7 @@ class BlendQuad:
     def draw(self):
         glPushAttrib(GL_ENABLE_BIT)
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
-        self.blend.apply()
+        self.alpha.apply()
 
         glBlendFunc(GL_ZERO, GL_SRC_COLOR)
         glEnable(GL_BLEND)

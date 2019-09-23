@@ -11,8 +11,8 @@ void main() {
 """
 
 fragmentShaderWithBlend = """
-uniform sampler2D texture0, texture1, texture2;
-uniform float blendGamma, targetGamma, mediaGamma;
+uniform sampler2D texture0, texture1, texture2, texture3;
+uniform float alphaGamma, betaGamma, targetGamma, mediaGamma;
 uniform mat4 warpMat;
 
 void main() {
@@ -31,14 +31,27 @@ void main() {
   col.y = pow(col.y, mediaGamma);
   col.z = pow(col.z, mediaGamma);
 
-  // Get the blend color at this pixel, and linearize it.
-  vec4 blend = texture2D(texture2, gl_TexCoord[0].xy);
-  float blendLinear = pow(blend.x, blendGamma);
+  // Get the alpha color at this pixel, and linearize it.
+  vec4 alpha = texture2D(texture2, gl_TexCoord[0].xy);
+  vec3 alphaLinear = vec3(pow(alpha.x, alphaGamma),
+                          pow(alpha.y, alphaGamma),
+                          pow(alpha.z, alphaGamma));
 
-  // Apply the blend color, and then re-apply the gamma curve.
-  col.x = pow(col.x * blendLinear, 1.0 / targetGamma);
-  col.y = pow(col.y * blendLinear, 1.0 / targetGamma);
-  col.z = pow(col.z * blendLinear, 1.0 / targetGamma);
+  // Get the beta color at this pixel, and linearize it.
+  vec4 beta = texture2D(texture3, gl_TexCoord[0].xy);
+  vec3 betaLinear = vec3(pow(beta.x, betaGamma),
+                         pow(beta.y, betaGamma),
+                         pow(beta.z, betaGamma));
+
+  // Apply the alpha and beta colors.
+  col.x = (col.x * alphaLinear.x * (1.0 - betaLinear.x)) + betaLinear.x;
+  col.y = (col.y * alphaLinear.y * (1.0 - betaLinear.y)) + betaLinear.y;
+  col.z = (col.z * alphaLinear.z * (1.0 - betaLinear.z)) + betaLinear.z;
+
+  // And finally, re-apply the gamma curve.
+  col.x = pow(col.x, 1.0 / targetGamma);
+  col.y = pow(col.y, 1.0 / targetGamma);
+  col.z = pow(col.z, 1.0 / targetGamma);
 
   gl_FragColor = col;
 }
@@ -46,7 +59,7 @@ void main() {
 
 fragmentShaderNoBlend = """
 uniform sampler2D texture0, texture1, texture2;
-uniform float blendGamma, targetGamma, mediaGamma;
+uniform float alphaGamma, betaGamma, targetGamma, mediaGamma;
 uniform mat4 warpMat;
 
 void main() {
@@ -85,7 +98,8 @@ class MpacsWarp2DShader(MpacsWarp2D):
 
     def initGL(self):
         MpacsWarp2D.initGL(self)
-        self.blend.initGL()
+        self.alpha.initGL()
+        self.beta.initGL()
 
         # Load the pfm data as a floating-point texture.
         self.pfmtexobj = glGenTextures(1)
@@ -147,7 +161,9 @@ class MpacsWarp2DShader(MpacsWarp2D):
         self.texture0Loc = glGetUniformLocation(self.shader, 'texture0')
         self.texture1Loc = glGetUniformLocation(self.shader, 'texture1')
         self.texture2Loc = glGetUniformLocation(self.shader, 'texture2')
-        self.blendGammaLoc = glGetUniformLocation(self.shader, 'blendGamma')
+        self.texture3Loc = glGetUniformLocation(self.shader, 'texture3')
+        self.alphaGammaLoc = glGetUniformLocation(self.shader, 'alphaGamma')
+        self.betaGammaLoc = glGetUniformLocation(self.shader, 'betaGamma')
         self.targetGammaLoc = glGetUniformLocation(self.shader, 'targetGamma')
         self.mediaGammaLoc = glGetUniformLocation(self.shader, 'mediaGamma')
         self.warpMatLoc = glGetUniformLocation(self.shader, 'warpMat')
@@ -160,13 +176,17 @@ class MpacsWarp2DShader(MpacsWarp2D):
         glActiveTexture(GL_TEXTURE1)
         glBindTexture(GL_TEXTURE_2D, self.media.texobj)
         glActiveTexture(GL_TEXTURE2)
-        glBindTexture(GL_TEXTURE_2D, self.blend.texobj)
+        glBindTexture(GL_TEXTURE_2D, self.alpha.texobj)
+        glActiveTexture(GL_TEXTURE3)
+        glBindTexture(GL_TEXTURE_2D, self.beta.texobj)
 
         shaders.glUseProgram(self.shader)
         glUniform1i(self.texture0Loc, 0)
         glUniform1i(self.texture1Loc, 1)
         glUniform1i(self.texture2Loc, 2)
-        glUniform1f(self.blendGammaLoc, self.blendGamma)
+        glUniform1i(self.texture3Loc, 3)
+        glUniform1f(self.alphaGammaLoc, self.alphaGamma)
+        glUniform1f(self.betaGammaLoc, self.betaGamma)
         glUniform1f(self.targetGammaLoc, self.targetGamma)
         glUniform1f(self.mediaGammaLoc, self.mediaGamma)
         glUniformMatrix4fv(self.warpMatLoc, 1, GL_FALSE, self.warpMat)

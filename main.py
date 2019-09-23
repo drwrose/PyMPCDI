@@ -255,8 +255,20 @@ for window in windows:
     if not window.outputFilename:
         allOutputFilename = False
 
+quitCount = 0
+def quitFunc():
+    global quitCount
+    quitCount += 1
+    if quitCount < 50:
+        return
+
+    print "Exiting"
+    sys.exit(0)
+
 if allOutputFilename:
-    # If everything is going to disk, quit after one frame.
-    glutIdleFunc(sys.exit)
+    # If everything is going to disk, quit after a few frames.  (If we
+    # quit after one frame, it sometimes locks up; some weird glut
+    # interaction I suppose.)
+    glutIdleFunc(quitFunc)
 
 glutMainLoop()

@@ -8,16 +8,19 @@ useMipmapping = False
 class TextureImage:
     """ A basic 2-d OpenGL texture image, as loaded from (for instance) a png file. """
 
-    def __init__(self, filename = None, data = None):
+    def __init__(self, filename = None, data = None, flat = None):
         self.filename = filename
         self.data = data
         self.texobj = None
+        self.flat = flat
 
     def __read(self):
         if self.data:
             return Image.open(StringIO(self.data))
         if self.filename:
             return Image.open(self.filename)
+        if self.flat:
+            return Image.new(*self.flat)
 
         assert False
 
@@ -25,6 +28,14 @@ class TextureImage:
         img = self.__read()
         if img.mode not in ['RGB', 'L', 'I']:
             img = img.convert('RGB')
+
+        max_texture_size = glGetIntegerv(GL_MAX_TEXTURE_SIZE);
+        if img.size[0] > max_texture_size or img.size[1] > max_texture_size:
+            new_size = (min(max_texture_size, img.size[0]),
+                        min(max_texture_size, img.size[1]))
+
+            print "Resizing image from %s to %s due to OpenGL limits" % (img.size, new_size)
+            img = img.resize(new_size, Image.BILINEAR)
 
         self.texobj = glGenTextures(1)
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
