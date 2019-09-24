@@ -57,31 +57,6 @@ void main() {
 }
 """
 
-fragmentShaderNoBlend = """
-uniform sampler2D texture0, texture1, texture2;
-uniform float alphaGamma, betaGamma, targetGamma, mediaGamma;
-uniform mat4 warpMat;
-
-void main() {
-  // Look up the warped UV coordinate in the pfm texture . . .
-  vec4 uv = texture2D(texture0, gl_TexCoord[0].xy);
-
-  // . . . apply the specified transform . . .
-  uv = warpMat * uv;
-
-  // . . . and use that UV coordinate to look up the media color.
-  vec4 col = texture2D(texture1, uv.xy);
-
-  // Linearize the media color.  We could also pre-linearize the media
-  // by using an sRGB texture format.
-  col.x = pow(col.x, mediaGamma);
-  col.y = pow(col.y, mediaGamma);
-  col.z = pow(col.z, mediaGamma);
-
-  gl_FragColor = col;
-}
-"""
-
 class MpacsWarp2DShader(MpacsWarp2D):
     """
     Implements 2D warping via a shader pipeline.
@@ -94,31 +69,11 @@ class MpacsWarp2DShader(MpacsWarp2D):
     def __init__(self, mpcdi, region):
         MpacsWarp2D.__init__(self, mpcdi, region)
 
-        self.pfmtexobj = None
-
     def initGL(self):
         MpacsWarp2D.initGL(self)
         self.alpha.initGL()
         self.beta.initGL()
-
-        # Load the pfm data as a floating-point texture.
-        self.pfmtexobj = glGenTextures(1)
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
-        glBindTexture(GL_TEXTURE_2D, self.pfmtexobj)
-
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-
-        # Fill every third element of the UV data with zeroes, instead
-        # of the default NaN's which aren't really useful, and can
-        # confuse OpenGL into ignoring the first two.
-        uv_list = numpy.fromstring(self.pfm.data, dtype = 'float32')
-        uvs3 = numpy.reshape(uv_list, (-1, 3), 'C')
-        uvs3[:,2].fill(0)
-
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, self.pfm.xSize, self.pfm.ySize, 0, GL_RGB, GL_FLOAT, uvs3)
+        self.warp.initGL()
 
         # Create a VBO with two triangles to make a unit quad.
         verts = [
@@ -152,10 +107,7 @@ class MpacsWarp2DShader(MpacsWarp2D):
 
         # Compile the shaders.
         vs = shaders.compileShader(vertexShader, GL_VERTEX_SHADER)
-        if self.includeBlend:
-            fs = shaders.compileShader(fragmentShaderWithBlend, GL_FRAGMENT_SHADER)
-        else:
-            fs = shaders.compileShader(fragmentShaderNoBlend, GL_FRAGMENT_SHADER)
+        fs = shaders.compileShader(fragmentShaderWithBlend, GL_FRAGMENT_SHADER)
         self.shader = shaders.compileProgram(vs, fs)
 
         self.texture0Loc = glGetUniformLocation(self.shader, 'texture0')
@@ -172,7 +124,7 @@ class MpacsWarp2DShader(MpacsWarp2D):
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
 
         glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, self.pfmtexobj)
+        glBindTexture(GL_TEXTURE_2D, self.warp.texobj)
         glActiveTexture(GL_TEXTURE1)
         glBindTexture(GL_TEXTURE_2D, self.media.texobj)
         glActiveTexture(GL_TEXTURE2)

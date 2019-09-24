@@ -25,6 +25,8 @@ class TextureImage:
         assert False
 
     def initGL(self):
+        assert self.texobj is None
+
         img = self.__read()
         if img.mode not in ['RGB', 'L', 'I']:
             img = img.convert('RGB')

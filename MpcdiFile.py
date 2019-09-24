@@ -3,6 +3,9 @@ from xml.etree import ElementTree
 import PfmFile
 import TextureImage
 import os.path
+from MpacsWarp2DShader import MpacsWarp2DShader
+from MpacsWarp2DFixedFunction import MpacsWarp2DFixedFunction
+from MpacsWarpSL import MpacsWarpSL
 
 class MpcdiFile:
     def __init__(self, filename = None):
@@ -79,6 +82,26 @@ class MpcdiFile:
         data = self.extractSubfile(filename)
         return TextureImage.TextureImage(filename = filename, data = data)
 
+    def makeWarp(self, regionName, useFixedFunction = False):
+        """ Returns an appropriate MpacsWarp instance to generate the
+        output for the indicated region, according to the MPCDI file's
+        profile.  If useFixedFunction is True, we return a
+        fixed-function variant if it's available. """
+
+        region = self.regions[regionName]
+
+        if self.profile == '2d':
+            if useFixedFunction:
+                return MpacsWarp2DFixedFunction(self, region)
+            else:
+                return MpacsWarp2DShader(self, region)
+        elif self.profile == 'sl':
+            return MpacsWarpSL(self, region)
+
+        else:
+            message = "Not yet implemented: profile %s" % (self.profile)
+            raise NotImplementedError, message
+
 class BufferDef:
     def __init__(self, xbuffer):
         self.id = xbuffer.attrib['id']
@@ -146,7 +169,7 @@ class RegionDef:
 
         self.frame = None
         xframe = xregion.find('coordinateFrame')
-        if xframe:
+        if xframe is not None:
             self.frame = FrameDef(xframe)
 
         print "Found region %s of size %s, %s" % (self.id, self.Xresolution, self.Yresolution)

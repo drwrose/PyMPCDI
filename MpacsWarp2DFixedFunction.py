@@ -24,13 +24,13 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
         MpacsWarp2D.initGL(self)
         self.blendCard.initGL()
 
-        xSize = self.pfm.xSize
-        ySize = self.pfm.ySize
+        xSize = self.warp.xSize
+        ySize = self.warp.ySize
 
         # Discard every third element of the UV data, which is mostly
         # NaN's and isn't really useful, and can confuse OpenGL into
         # ignoring the first two.
-        uv_list = numpy.fromstring(self.pfm.data, dtype = 'float32')
+        uv_list = numpy.fromstring(self.warp.data, dtype = 'float32')
         uvs3 = numpy.reshape(uv_list, (-1, 3), 'C')
         uvs = uvs3[:,0:2]
 
@@ -115,16 +115,15 @@ class MpacsWarp2DFixedFunction(MpacsWarp2D):
         glPopClientAttrib()
         glPopAttrib()
 
-        if self.includeBlend:
-            # Now apply the blending map.
+        # Now apply the blending map.
 
-            # We ought to apply the blending map in linear space, then
-            # re-apply the gamma curve; but this isn't really possible in
-            # the fixed-function pipeline.  So we just naively apply the
-            # blending map to the warp by multiplying it as-is over the
-            # whole frame (assuming that it's been pre-scaled with the
-            # target gamma).  This actually isn't a terrible approach, and
-            # looks fine as long as the media is sufficiently bright.
-            self.blendCard.draw()
+        # We ought to apply the blending map in linear space, then
+        # re-apply the gamma curve; but this isn't really possible in
+        # the fixed-function pipeline.  So we just naively apply the
+        # blending map to the warp by multiplying it as-is over the
+        # whole frame (assuming that it's been pre-scaled with the
+        # target gamma).  This actually isn't a terrible approach, and
+        # looks fine as long as the media is sufficiently bright.
+        self.blendCard.draw()
 
         self.saveOutputImage()

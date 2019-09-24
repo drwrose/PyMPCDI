@@ -1,4 +1,5 @@
 from TextureImage import TextureImage
+from ObjFile import ObjFile
 from OpenGL.GL import *
 from PIL import Image
 import sys
@@ -12,10 +13,37 @@ class MpacsWarp:
 
         self.windowSize = self.region.Xresolution, self.region.Yresolution
 
-        self.outputFilename = None
-        self.includeBlend = True
+        self.mediaFilename = None
+        self.media = None
 
-        self.blend = self.mpcdi.extractTextureImage(self.region.alphaMap.path)
+        self.modelFilename = None
+        self.model = None
+
+        self.outputFilename = None
+
+        # If an alpha map is included, it is the primary blend map,
+        # and is used to darken the whites.
+        if self.region.alphaMap:
+            self.alpha = self.mpcdi.extractTextureImage(self.region.alphaMap.path)
+            # This is the gamma value of the embedded alpha map.
+            self.alphaGamma = self.region.alphaMap.gammaEmbedded
+        else:
+            self.__makeDefaultAlpha()
+
+        # If a beta map is included, it is a "black level uplift" map,
+        # used to brighten the blacks.
+        if self.region.betaMap:
+            self.beta = self.mpcdi.extractTextureImage(self.region.betaMap.path)
+            # This is the gamma value of the embedded beta map.
+            self.betaGamma = self.region.betaMap.gammaEmbedded
+        else:
+            self.__makeDefaultBeta()
+
+        # This is the gamma value we will want to display.
+        self.targetGamma = self.alphaGamma
+
+        # This is the gamma value of the source media image.
+        self.mediaGamma = self.alphaGamma
 
         # This is the gamma value of the embedded alpha map.
         self.blendGamma = self.region.alphaMap.gammaEmbedded
@@ -23,8 +51,29 @@ class MpacsWarp:
         # This is the gamma value we will want to display.
         self.targetGamma = self.blendGamma
 
+    def disableBlend(self):
+        # Turn off blending by clearing the alpha and beta maps.
+        self.__makeDefaultAlpha()
+        self.__makeDefaultBeta()
+
+    def __makeDefaultAlpha(self):
+        self.alpha = TextureImage(flat = ('L', self.windowSize, 255))
+        self.alphaGamma = 1.0
+
+    def __makeDefaultBeta(self):
+        self.beta = TextureImage(flat = ('L', self.windowSize, 0))
+        self.betaGamma = 1.0
+
     def setWindowSize(self, windowSize):
         self.windowSize = windowSize
+
+    def setMediaFilename(self, mediaFilename):
+        self.mediaFilename = mediaFilename
+        self.media = TextureImage(self.mediaFilename)
+
+    def setModelFilename(self, modelFilename):
+        self.modelFilename = modelFilename
+        self.model = ObjFile(self.modelFilename)
 
     def setOutputFilename(self, outputFilename):
         self.outputFilename = outputFilename
@@ -44,4 +93,4 @@ class MpacsWarp:
         print self.outputFilename
 
     def initGL(self):
-        pass
+        self.media.initGL()

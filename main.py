@@ -6,9 +6,6 @@ from OpenGL.GL import *
 from OpenGL.GLUT import *
 import TextureImage
 
-from MpacsWarp2DShader import MpacsWarp2DShader
-from MpacsWarp2DFixedFunction import MpacsWarp2DFixedFunction
-
 help = """
 
 This program provides a bare-bones OpenGL implementation of the 2-D
@@ -38,12 +35,21 @@ Options:
         apply to all regions, and options that follow each -r apply
         only to that particular region.
 
-    -i mediaFilename
-        Specify the media file to load and warp.  The default is a plain grid.
+    -i mediaFilename.png
+        Specify the media file to load and warp.  The default is a
+        plain grid.  Most common image file formats are accepted.
 
-    -o outputFilename
+    -o modelFilename.obj
+        Specify the model file, if relevant for the MPCDI profile.
+        This is not used for the 2-D profile, but in the Shader Lamp
+        profile it is loaded (and the mediaFilename applied to it as a
+        texture), and rendered from the point of view of each
+        projector.  Only OBJ file format is accepted.
+
+    -w outputFilename.png
         Specify an optional image filename to save the warped output
-        to.  The default is not to save it, only to display it.
+        to.  Most common image file formats are supported.  The
+        default is not to save it, only to display it.
 
     -s width,height
         Specify the size of the window.
@@ -74,11 +80,11 @@ class Window:
     def __init__(self):
         # Command-line parameters.
         self.mpcdiFilename = None
-        self.mediaFilename = None
+        self.mediaFilename = 'color_grid.png'
+        self.modelFilename = None
         self.outputFilename = None
         self.useFbo = False
         self.regionName = None
-        self.mediaFilename = 'color_grid.png'
         self.targetGamma = None
         self.useFixedFunction = False
         self.windowSize = None
@@ -147,24 +153,21 @@ class Window:
         if not self.regionName:
             self.regionName = self.mpcdi.regionIdList[0]
 
-        self.region = self.mpcdi.regions[self.regionName]
-
-        if self.useFixedFunction:
-            self.warp = MpacsWarp2DFixedFunction(self.mpcdi, self.region)
-        else:
-            self.warp = MpacsWarp2DShader(self.mpcdi, self.region)
+        self.warp = self.mpcdi.makeWarp(self.regionName, useFixedFunction = self.useFixedFunction)
+        self.region = self.warp.region
 
         if self.targetGamma is not None:
             self.warp.targetGamma = self.targetGamma
 
-        if self.includeBlend is not None:
-            self.warp.includeBlend = self.includeBlend
+        if self.includeBlend is not None and not self.includeBlend:
+            self.warp.disableBlend()
 
         if not self.windowSize:
             self.windowSize = self.region.Xresolution, self.region.Yresolution
 
         self.warp.setWindowSize(self.windowSize)
         self.warp.setMediaFilename(self.mediaFilename)
+        self.warp.setModelFilename(self.modelFilename)
         if self.outputFilename:
             self.warp.setOutputFilename(self.outputFilename)
             self.useFbo = True
@@ -197,7 +200,7 @@ currentWindow = defaultWindowParams
 windows = []
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], 'm:i:o:r:s:g:bfMh')
+    opts, args = getopt.getopt(sys.argv[1:], 'm:i:o:w:r:s:g:bfMh')
 except getopt.error, msg:
     usage(1, msg)
 
@@ -218,6 +221,8 @@ for opt, arg in opts:
     elif opt == '-i':
         currentWindow.mediaFilename = arg
     elif opt == '-o':
+        currentWindow.modelFilename = arg
+    elif opt == '-w':
         currentWindow.outputFilename = arg
     elif opt == '-r':
         # Each occurrence of -r defines a new region.  The parameters
@@ -259,7 +264,7 @@ quitCount = 0
 def quitFunc():
     global quitCount
     quitCount += 1
-    if quitCount < 50:
+    if quitCount < 200:
         return
 
     print "Exiting"
