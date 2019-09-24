@@ -3,8 +3,7 @@ from xml.etree import ElementTree
 import PfmFile
 import TextureImage
 import os.path
-from MpacsWarp2DShader import MpacsWarp2DShader
-from MpacsWarp2DFixedFunction import MpacsWarp2DFixedFunction
+from MpacsWarp2D import MpacsWarp2D
 from MpacsWarpSL import MpacsWarpSL
 
 class MpcdiFile:
@@ -82,19 +81,15 @@ class MpcdiFile:
         data = self.extractSubfile(filename)
         return TextureImage.TextureImage(filename = filename, data = data)
 
-    def makeWarp(self, regionName, useFixedFunction = False):
+    def makeWarp(self, regionName):
         """ Returns an appropriate MpacsWarp instance to generate the
         output for the indicated region, according to the MPCDI file's
-        profile.  If useFixedFunction is True, we return a
-        fixed-function variant if it's available. """
+        profile. """
 
         region = self.regions[regionName]
 
         if self.profile == '2d':
-            if useFixedFunction:
-                return MpacsWarp2DFixedFunction(self, region)
-            else:
-                return MpacsWarp2DShader(self, region)
+            return MpacsWarp2D(self, region)
         elif self.profile == 'sl':
             return MpacsWarpSL(self, region)
 

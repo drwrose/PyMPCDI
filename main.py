@@ -64,10 +64,6 @@ Options:
         Enable mipmapping.  Without this option simple bilinear
         filtering is used instead.
 
-    -f
-        Use the fixed-function implementation instead of the
-        shader-based implementation.
-
 """
 
 
@@ -86,7 +82,6 @@ class Window:
         self.useFbo = False
         self.regionName = None
         self.targetGamma = None
-        self.useFixedFunction = False
         self.windowSize = None
         self.includeBlend = None
 
@@ -153,7 +148,7 @@ class Window:
         if not self.regionName:
             self.regionName = self.mpcdi.regionIdList[0]
 
-        self.warp = self.mpcdi.makeWarp(self.regionName, useFixedFunction = self.useFixedFunction)
+        self.warp = self.mpcdi.makeWarp(self.regionName)
         self.region = self.warp.region
 
         if self.targetGamma is not None:
@@ -200,7 +195,7 @@ currentWindow = defaultWindowParams
 windows = []
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], 'm:i:o:w:r:s:g:bfMh')
+    opts, args = getopt.getopt(sys.argv[1:], 'm:i:o:w:r:s:g:bMh')
 except getopt.error, msg:
     usage(1, msg)
 
@@ -236,8 +231,6 @@ for opt, arg in opts:
         currentWindow.targetGamma = float(arg)
     elif opt == '-b':
         currentWindow.includeBlend = False
-    elif opt == '-f':
-        currentWindow.useFixedFunction = True
     elif opt == '-M':
         TextureImage.useMipmapping = True
     elif opt == '-h':

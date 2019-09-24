@@ -1,29 +1,27 @@
-from MpacsWarp3D import MpacsWarp3D
+from MpacsWarp2D import MpacsWarp2D
 from OpenGL.GL import *
 from OpenGL.GL import shaders
 import numpy
 import math
 
-vertexShader = """
+vertexShaderSL = """
 void main() {
   gl_TexCoord[0] = gl_MultiTexCoord0;
   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }
 """
 
-fragmentShader = """
-uniform sampler2D texture0, texture1, texture2;
-uniform float blendGamma, targetGamma, mediaGamma;
-uniform mat4 warpMat;
+fragmentShaderSL = """
+uniform sampler2D texture0;
 
 void main() {
   vec4 uv = gl_TexCoord[0];
   uv.y = 1.0 - uv.y;
-  gl_FragColor = texture2D(texture1, uv.xy);
+  gl_FragColor = texture2D(texture0, uv.xy);
 }
 """
 
-class MpacsWarpSL(MpacsWarp3D):
+class MpacsWarpSL(MpacsWarp2D):
     """
     Implements Shader-lamp warping via a shader pipeline.
 
@@ -32,65 +30,37 @@ class MpacsWarpSL(MpacsWarp3D):
     """
 
     def __init__(self, mpcdi, region):
-        MpacsWarp3D.__init__(self, mpcdi, region)
+        MpacsWarp2D.__init__(self, mpcdi, region)
 
-        self.distort = self.mpcdi.extractPfmFile(self.region.distortionMap.path)
+        # In the Shader Lamp profile, the "geometryWarpFile" is
+        # actually the screen geometry mesh, not the 2-d warp.
+        self.geom = self.warp
+
+        # But the "distortionMap" is basically the same as the 2-d
+        # warp in the 2d profile.
+        self.warp = self.mpcdi.extractPfmFile(self.region.distortionMap.path)
 
     def initGL(self):
-        MpacsWarp3D.initGL(self)
+        MpacsWarp2D.initGL(self)
         self.model.initGL()
-        self.alpha.initGL()
-        self.beta.initGL()
-        self.distort.initGL()
-
-        # A matrix to scale the warping UV's into the correct range
-        # specified by the Region (as defined in the mpcdi.xml file).
-        rangeMat = numpy.array(
-            [[self.region.xsize, 0, 0, 0],
-             [0, self.region.ysize, 0, 0],
-             [0, 0, 1, 0],
-             [self.region.x, self.region.y, 0, 1]])
-
-        # We also need to flip the V axis to match OpenGL's texturing
-        # convention.  (Or we could have loaded the media file in
-        # upside-down.)
-        flipMat = numpy.array(
-            [[1, 0, 0, 0],
-             [0, -1, 0, 0],
-             [0, 0, 1, 0],
-             [0, 1, 0, 1]])
-
-        # Accumulate them both into the single warping matrix.
-        self.warpMat = rangeMat.dot(flipMat)
 
         # Compile the shaders.
-        vs = shaders.compileShader(vertexShader, GL_VERTEX_SHADER)
-        fs = shaders.compileShader(fragmentShader, GL_FRAGMENT_SHADER)
-        self.shader = shaders.compileProgram(vs, fs)
+        vs = shaders.compileShader(vertexShaderSL, GL_VERTEX_SHADER)
+        fs = shaders.compileShader(fragmentShaderSL, GL_FRAGMENT_SHADER)
+        self.shaderSL = shaders.compileProgram(vs, fs)
 
-        self.texture0Loc = glGetUniformLocation(self.shader, 'texture0')
-        self.texture1Loc = glGetUniformLocation(self.shader, 'texture1')
-        self.texture2Loc = glGetUniformLocation(self.shader, 'texture2')
-        self.texture3Loc = glGetUniformLocation(self.shader, 'texture3')
-        self.alphaGammaLoc = glGetUniformLocation(self.shader, 'alphaGamma')
-        self.betaGammaLoc = glGetUniformLocation(self.shader, 'betaGamma')
-        self.targetGammaLoc = glGetUniformLocation(self.shader, 'targetGamma')
-        self.mediaGammaLoc = glGetUniformLocation(self.shader, 'mediaGamma')
-        self.warpMatLoc = glGetUniformLocation(self.shader, 'warpMat')
+        self.texture0LocSL = glGetUniformLocation(self.shaderSL, 'texture0')
 
-    def draw(self):
+    def draw_3d(self):
+        """ Draws the scene from the POV of the projector.  Applies no
+        distortion maps or blends yet. """
+
         glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS)
 
         glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, self.distort.texobj)
-        glActiveTexture(GL_TEXTURE1)
         glBindTexture(GL_TEXTURE_2D, self.media.texobj)
-        glActiveTexture(GL_TEXTURE2)
-        glBindTexture(GL_TEXTURE_2D, self.alpha.texobj)
-        glActiveTexture(GL_TEXTURE3)
-        glBindTexture(GL_TEXTURE_2D, self.beta.texobj)
 
-        # Hack, set up frustum and transform
+        # Set up frustum and transform
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
 
@@ -117,16 +87,8 @@ class MpacsWarpSL(MpacsWarp3D):
         # TODO: this also seems wrong, but it matches 7th Sense
         glTranslate(-self.region.frame.posx, -self.region.frame.posz, self.region.frame.posy)
 
-        shaders.glUseProgram(self.shader)
-        glUniform1i(self.texture0Loc, 0)
-        glUniform1i(self.texture1Loc, 1)
-        glUniform1i(self.texture2Loc, 2)
-        glUniform1i(self.texture3Loc, 3)
-        glUniform1f(self.alphaGammaLoc, self.alphaGamma)
-        glUniform1f(self.betaGammaLoc, self.betaGamma)
-        glUniform1f(self.targetGammaLoc, self.targetGamma)
-        glUniform1f(self.mediaGammaLoc, self.mediaGamma)
-        glUniformMatrix4fv(self.warpMatLoc, 1, GL_FALSE, self.warpMat)
+        shaders.glUseProgram(self.shaderSL)
+        glUniform1i(self.texture0LocSL, 0)
 
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_TEXTURE_COORD_ARRAY)
@@ -144,5 +106,31 @@ class MpacsWarpSL(MpacsWarp3D):
         glUseProgram(0)
 
         glPopClientAttrib()
+
+    def draw(self):
+        # First, render the 3-D scene.
+        self.draw_3d()
+
+        # Copy the resulting image to a new texture.  We could have
+        # rendered it to a different FBO instead of doing this copy,
+        # but the point of this code is not necessarily to make the
+        # most efficient use of OpenGL, and this is a bit simpler.
+        self.texobj = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, self.texobj)
+
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+
+        width, height = self.windowSize
+        glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, width, height, 0);
+
+        # Now, clear the buffr and draw the resulting image again in
+        # 2-D, this time warping it with the distortion map, and also
+        # apply the projector-space blends.
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+        self.draw_2d_and_blend(self.texobj, flipMedia = False)
 
         self.saveOutputImage()
